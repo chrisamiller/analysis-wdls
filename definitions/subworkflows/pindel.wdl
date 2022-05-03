@@ -23,12 +23,14 @@ workflow pindel {
     String normal_sample_name
     Int insert_size = 400
     Int scatter_count = 50
+    Int preemptible_tries = 3
   }
 
   call siltb.splitIntervalListToBed {
     input:
     interval_list=interval_list,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 
   scatter(region_file in splitIntervalListToBed.split_beds) {
@@ -44,12 +46,15 @@ workflow pindel {
       region_file=region_file,
       insert_size=insert_size,
       tumor_sample_name=tumor_sample_name,
-      normal_sample_name=normal_sample_name
+      normal_sample_name=normal_sample_name,
+      preemptible_tries=preemptible_tries
     }
   }
 
   call ca.catAll {
-    input: region_pindel_outs=pindelCat.per_region_pindel_out
+    input: 
+    region_pindel_outs=pindelCat.per_region_pindel_out,
+    preemptible_tries=preemptible_tries
   }
 
   call psf.pindelSomaticFilter as somaticFilter {
@@ -57,25 +62,33 @@ workflow pindel {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    pindel_output_summary=catAll.all_region_pindel_head
+    pindel_output_summary=catAll.all_region_pindel_head,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip {
-    input: file=somaticFilter.vcf
+    input: 
+    file=somaticFilter.vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
-    input: vcf=bgzip.bgzipped_file
+    input: 
+    vcf=bgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call ret.removeEndTags {
     input:
     vcf=index.indexed_vcf,
-    vcf_tbi=index.indexed_vcf_tbi
+    vcf_tbi=index.indexed_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as reindex {
-    input: vcf=removeEndTags.processed_vcf
+    input: 
+    vcf=removeEndTags.processed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call ff.fpFilter as filter {
@@ -88,7 +101,8 @@ workflow pindel {
     vcf=reindex.indexed_vcf,
     vcf_tbi=reindex.indexed_vcf_tbi,
     variant_caller="pindel",
-    sample_name=tumor_sample_name
+    sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   output {

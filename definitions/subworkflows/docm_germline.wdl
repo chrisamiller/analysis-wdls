@@ -15,6 +15,7 @@ workflow docmGermline {
     File docm_vcf
     File docm_vcf_tbi
     File interval_list
+    Int preemptible_tries = 3
   }
 
   call dghc.docmGatkHaplotypeCaller as gatkHaplotypecaller {
@@ -26,22 +27,26 @@ workflow docmGermline {
     bam_bai=bam_bai,
     docm_vcf=docm_vcf,
     docm_vcf_tbi=docm_vcf_tbi,
-    interval_list=interval_list
+    interval_list=interval_list,
+    preemptible_tries=preemptible_tries
   }
 
   call ssdf.singleSampleDocmFilter as docmFilter {
     input:
-    docm_out=gatkHaplotypecaller.docm_raw_variants
+    docm_out=gatkHaplotypecaller.docm_raw_variants,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip {
     input:
-    file=docmFilter.docm_filter_out
+    file=docmFilter.docm_filter_out,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
     input:
-    vcf=bgzip.bgzipped_file
+    vcf=bgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   output {

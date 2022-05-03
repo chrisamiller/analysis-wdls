@@ -26,6 +26,7 @@ workflow sequenceToTrimmedFastqAndHisatAlignments {
     File reference_index_8ht2
     String? strand  # [first, second, unstranded]
     Boolean? unzip_fastqs
+    Int preemptible_tries = 3
   }
 
   call stf.sequenceToFastq {
@@ -33,7 +34,8 @@ workflow sequenceToTrimmedFastqAndHisatAlignments {
     bam=unaligned.sequence.bam,
     fastq1=unaligned.sequence.fastq1,
     fastq2=unaligned.sequence.fastq2,
-    unzip_fastqs=unzip_fastqs
+    unzip_fastqs=unzip_fastqs,
+    preemptible_tries=preemptible_tries
   }
 
   call tf.trimFastq {
@@ -44,7 +46,8 @@ workflow sequenceToTrimmedFastqAndHisatAlignments {
     adapter_trim_end=adapter_trim_end,
     adapter_min_overlap=adapter_min_overlap,
     max_uncalled=max_uncalled,
-    min_readlength=min_readlength
+    min_readlength=min_readlength,
+    preemptible_tries=preemptible_tries
   }
 
   call ha.hisat2Align {
@@ -62,7 +65,8 @@ workflow sequenceToTrimmedFastqAndHisatAlignments {
     fastq2=trimFastq.fastqs[1],
     read_group_id=read_group_id,
     read_group_fields=read_group_fields,
-    strand=strand
+    strand=strand,
+    preemptible_tries=preemptible_tries
   }
 
   output {

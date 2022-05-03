@@ -23,6 +23,7 @@ workflow qcWgsNonhuman {
     Array[LabelledFile] per_base_intervals
     Array[LabelledFile] per_target_intervals
     Array[LabelledFile] summary_intervals
+    Int preemptible_tries = 3
   }
 
   call cism.collectInsertSizeMetrics {
@@ -32,7 +33,8 @@ workflow qcWgsNonhuman {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    metric_accumulation_level=picard_metric_accumulation_level
+    metric_accumulation_level=picard_metric_accumulation_level,
+    preemptible_tries=preemptible_tries
   }
 
   call casm.collectAlignmentSummaryMetrics {
@@ -42,7 +44,8 @@ workflow qcWgsNonhuman {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    metric_accumulation_level=picard_metric_accumulation_level
+    metric_accumulation_level=picard_metric_accumulation_level,
+    preemptible_tries=preemptible_tries
   }
 
   call cgbm.collectGcBiasMetrics {
@@ -52,7 +55,8 @@ workflow qcWgsNonhuman {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    metric_accumulation_level=picard_metric_accumulation_level
+    metric_accumulation_level=picard_metric_accumulation_level,
+    preemptible_tries=preemptible_tries
   }
 
   call cwm.collectWgsMetrics {
@@ -61,13 +65,15 @@ workflow qcWgsNonhuman {
     bam_bai=bam_bai,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call sf.samtoolsFlagstat {
     input:
     bam=bam,
-    bam_bai=bam_bai
+    bam_bai=bam_bai,
+    preemptible_tries=preemptible_tries
   }
 
   call hm.hsMetrics as collectHsMetrics {
@@ -81,7 +87,8 @@ workflow qcWgsNonhuman {
     minimum_base_quality=minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call btb.bamToBigwig as cgpbigwigBamcoverage {
@@ -90,7 +97,8 @@ workflow qcWgsNonhuman {
     bam_bai=bam_bai,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   output {

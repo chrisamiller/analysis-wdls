@@ -15,12 +15,14 @@ task strelka {
     # https://github.com/Illumina/strelka/blob/master/docs/userGuide/README.md#improving-runtime-for-references-with-many-short-contigs-such-as-grch38
     File? call_regions
     File? call_regions_tbi
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float bam_size = size([tumor_bam, tumor_bam_bai, normal_bam, normal_bam_bai], "GB")
   Int space_needed_gb = 10 + round(bam_size*2 + reference_size)
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     cpu: 4
     docker: "mgibio/strelka-cwl:2.9.9"
@@ -59,6 +61,7 @@ workflow wf {
     File reference_dict
     Boolean exome_mode
     Int? cpu_reserved
+    Int preemptible_tries = 3
   }
 
   call strelka {
@@ -72,5 +75,6 @@ workflow wf {
     reference_dict=reference_dict,
     exome_mode=exome_mode,
     cpu_reserved=cpu_reserved,
+    preemptible_tries=preemptible_tries
   }
 }

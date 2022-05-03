@@ -30,6 +30,7 @@ task starAlignFusion {
     String outfile_name_prefix = "STAR_"
     String read_files_command = "cat"
     Array[String] outsam_attributes = ["NH", "HI", "AS", "NM", "MD"]
+    Int preemptible_tries = 3
   }
 
   Int cores = 10
@@ -37,6 +38,7 @@ task starAlignFusion {
   Float fastq_size = size(flatten([fastq, fastq2]), "GB")
   Int space_needed_gb = 10 + round(2 * (zip_size + fastq_size))
   runtime {
+    preemptible: preemptible_tries
     cpu: cores
     memory: "64GB"
     docker: "trinityctat/starfusion:1.10.1"

@@ -22,6 +22,7 @@ workflow varscan {
     Float min_var_freq = 0.1
     Float p_value = 0.99
     Float? max_normal_freq
+    Int preemptible_tries = 3
   }
 
   call vs.varscanSomatic as somatic {
@@ -37,19 +38,22 @@ workflow varscan {
     strand_filter=strand_filter,
     min_coverage=min_coverage,
     min_var_freq=min_var_freq,
-    p_value=p_value
+    p_value=p_value,
+    preemptible_tries=preemptible_tries
   }
 
   call vps.varscanProcessSomatic as process_somatic_snvs {
     input:
     variants=somatic.snvs,
-    max_normal_freq=max_normal_freq
+    max_normal_freq=max_normal_freq,
+    preemptible_tries=preemptible_tries
   }
 
   call vps.varscanProcessSomatic as process_somatic_indels {
     input:
     variants=somatic.indels,
-    max_normal_freq=max_normal_freq
+    max_normal_freq=max_normal_freq,
+    preemptible_tries=preemptible_tries
   }
 
 

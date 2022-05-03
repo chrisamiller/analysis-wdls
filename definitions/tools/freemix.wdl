@@ -3,9 +3,11 @@ version 1.0
 task freemix {
   input {
     File verify_bam_id_metrics
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     docker: "python:3.10"
   }
 
@@ -27,10 +29,12 @@ task freemix {
 workflow wf {
   input {
     File verify_bam_id_metrics
+    Int preemptible_tries = 3
   }
 
   call freemix {
     input:
-    verify_bam_id_metrics=verify_bam_id_metrics
-  }
+      verify_bam_id_metrics=verify_bam_id_metrics,
+      preemptible_tries=preemptible_tries
+  }    
 }

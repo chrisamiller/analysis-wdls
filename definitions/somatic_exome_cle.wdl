@@ -76,6 +76,7 @@ workflow somaticExomeCle {
     String disclaimer_version
     String tumor_sample_name
     String normal_sample_name
+    Int preemptible_tries
   }
 
   call ae.alignmentExome as tumorAlignmentAndQc {
@@ -102,7 +103,8 @@ workflow somaticExomeCle {
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
     qc_minimum_base_quality=qc_minimum_base_quality,
-    final_name="~{tumor_name}.bam"
+    final_name="~{tumor_name}.bam",
+    preemptible_tries=preemptible_tries
   }
 
   call ae.alignmentExome as normalAlignmentAndQc {
@@ -129,7 +131,8 @@ workflow somaticExomeCle {
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
     qc_minimum_base_quality=qc_minimum_base_quality,
-    final_name="~{normal_name}.bam"
+    final_name="~{normal_name}.bam",
+    preemptible_tries=preemptible_tries
   }
 
   call c.concordance {
@@ -141,13 +144,15 @@ workflow somaticExomeCle {
     bam_1_bai=tumorAlignmentAndQc.bam_bai,
     bam_2=normalAlignmentAndQc.bam,
     bam_2_bai=normalAlignmentAndQc.bam_bai,
-    vcf=somalier_vcf
+    vcf=somalier_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call ile.intervalListExpand as padTargetIntervals {
     input:
     interval_list=target_intervals,
-    roi_padding=target_interval_padding
+    roi_padding=target_interval_padding,
+    preemptible_tries=preemptible_tries
   }
 
   call dv.detectVariants {
@@ -190,6 +195,7 @@ workflow somaticExomeCle {
     tumor_sample_name=tumor_sample_name,
     normal_sample_name=normal_sample_name,
     vep_custom_annotations=vep_custom_annotations,
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerToFinalTsv {
@@ -197,7 +203,8 @@ workflow somaticExomeCle {
     input_file=detectVariants.final_tsv,
     line_number=1,
     some_text="#~{disclaimer_text}",
-    output_name=basename(detectVariants.final_tsv)
+    output_name=basename(detectVariants.final_tsv),
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerVersionToFinalTsv {
@@ -205,7 +212,8 @@ workflow somaticExomeCle {
     input_file=addDisclaimerToFinalTsv.output_file,
     line_number=2,
     some_text="#The software version is ~{disclaimer_version}",
-    output_name=basename(addDisclaimerToFinalTsv.output_file)
+    output_name=basename(addDisclaimerToFinalTsv.output_file),
+    preemptible_tries=preemptible_tries
   }
 
   call asalb.addStringAtLineBgzipped as addDisclaimerToFinalFilteredVcf {
@@ -213,7 +221,8 @@ workflow somaticExomeCle {
     input_file=detectVariants.final_filtered_vcf,
     line_number=2,
     some_text="##DisclaimerText=~{disclaimer_text}",
-    output_name=basename(detectVariants.final_filtered_vcf)
+    output_name=basename(detectVariants.final_filtered_vcf),
+    preemptible_tries=preemptible_tries
   }
 
   call asalb.addStringAtLineBgzipped as addDisclaimerVersionToFinalFilteredVcf {
@@ -221,11 +230,14 @@ workflow somaticExomeCle {
     input_file=addDisclaimerToFinalFilteredVcf.output_file,
     line_number=3,
     some_text="##CLESoftwareVersion=~{disclaimer_version}",
-    output_name=basename(addDisclaimerToFinalFilteredVcf.output_file)
+    output_name=basename(addDisclaimerToFinalFilteredVcf.output_file),
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as annotatedFilterVcfIndex {
-    input: vcf=addDisclaimerVersionToFinalFilteredVcf.output_file
+    input: 
+    vcf=addDisclaimerVersionToFinalFilteredVcf.output_file,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as tumorBamToCram {
@@ -233,11 +245,14 @@ workflow somaticExomeCle {
     bam=tumorAlignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as tumorIndexCram {
-    input: cram=tumorBamToCram.cram
+    input: 
+    cram=tumorBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as normalBamToCram {
@@ -245,11 +260,14 @@ workflow somaticExomeCle {
     bam=normalAlignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as normalIndexCram {
-    input: cram=normalBamToCram.cram
+    input: 
+    cram=normalBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

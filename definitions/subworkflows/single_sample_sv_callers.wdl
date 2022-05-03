@@ -45,6 +45,7 @@ workflow singleSampleSvCallers {
     Float? cnv_duplication_depth
     Int? cnv_filter_min_size
     File? blocklist_bedpe
+    Int preemptible_tries = 3
   }
 
   call css.cnvkitSingleSample as runCnvkit {
@@ -60,15 +61,18 @@ workflow singleSampleSvCallers {
     cnvkit_vcf_name=cnvkit_vcf_name,
     segment_filter="cn",
     reference=reference,
-    reference_fai=reference_fai
+    reference_fai=reference_fai,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as runCnvkitRawBgzip {
-    input: file=runCnvkit.cnvkit_vcf
+    input: file=runCnvkit.cnvkit_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as runCnvkitRawIndex {
-    input: vcf=runCnvkitRawBgzip.bgzipped_file
+    input: vcf=runCnvkitRawBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call sdcf.svDepthCallerFilter as runCnvkitFilter {
@@ -78,7 +82,8 @@ workflow singleSampleSvCallers {
     min_sv_size=cnv_filter_min_size,
     output_vcf_name="filtered_cnvkit.vcf",
     sv_vcf=runCnvkit.cnvkit_vcf,
-    vcf_source="cnvkit"
+    vcf_source="cnvkit",
+    preemptible_tries=preemptible_tries
   }
 
   call c.cnvnator as runCnvnator {
@@ -86,15 +91,18 @@ workflow singleSampleSvCallers {
     bam=bam,
     reference=reference,
     reference_fai=reference_fai,
-    sample_name="cnvnator"
+    sample_name="cnvnator",
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as runCnvnatorRawBgzip {
-    input: file=runCnvnator.vcf
+    input: file=runCnvnator.vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as runCnvnatorRawIndex {
-    input: vcf=runCnvnatorRawBgzip.bgzipped_file
+    input: vcf=runCnvnatorRawBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call sdcf.svDepthCallerFilter as runCnvnatorFilter {
@@ -104,7 +112,8 @@ workflow singleSampleSvCallers {
     min_sv_size=cnv_filter_min_size,
     output_vcf_name="filtered_cnvnator.vcf",
     sv_vcf=runCnvnator.vcf,
-    vcf_source="cnvnator"
+    vcf_source="cnvnator",
+    preemptible_tries=preemptible_tries
   }
 
   call ms.mantaSomatic as runManta {
@@ -116,7 +125,8 @@ workflow singleSampleSvCallers {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     tumor_bam=bam,
-    tumor_bam_bai=bam_bai
+    tumor_bam_bai=bam_bai,
+    preemptible_tries=preemptible_tries
   }
 
   call sprcf.svPairedReadCallerFilter as runMantaFilter {
@@ -133,7 +143,8 @@ workflow singleSampleSvCallers {
     sv_paired_count=sv_paired_count,
     sv_split_count=sv_split_count,
     sv_vcf=select_first([runManta.tumor_only_variants]),
-    vcf_source="manta"
+    vcf_source="manta",
+    preemptible_tries=preemptible_tries
   }
 
   call s.smoove as runSmoove {
@@ -142,7 +153,8 @@ workflow singleSampleSvCallers {
     exclude_regions=smoove_exclude_regions,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call sprcf.svPairedReadCallerFilter as runSmooveFilter {
@@ -159,7 +171,8 @@ workflow singleSampleSvCallers {
     sv_paired_count=sv_paired_count,
     sv_split_count=sv_split_count,
     sv_vcf=runSmoove.output_vcf,
-    vcf_source="smoove"
+    vcf_source="smoove",
+    preemptible_tries=preemptible_tries
   }
 
   call mss.mergeSvs as runMerge {
@@ -173,7 +186,8 @@ workflow singleSampleSvCallers {
     same_type=merge_same_type,
     snps_vcf=snps_vcf,
     blocklist_bedpe=blocklist_bedpe,
-    sv_vcfs=[runCnvkitFilter.filtered_vcf, runCnvnatorFilter.filtered_vcf, runMantaFilter.filtered_vcf, runSmooveFilter.filtered_vcf]
+    sv_vcfs=[runCnvkitFilter.filtered_vcf, runCnvnatorFilter.filtered_vcf, runMantaFilter.filtered_vcf, runSmooveFilter.filtered_vcf],
+    preemptible_tries=preemptible_tries
   }
 
   output {

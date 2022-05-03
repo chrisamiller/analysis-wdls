@@ -11,6 +11,7 @@ task starFusionDetect {
     String? fusioninspector_mode  # enum [inspect, validate]
     Array[File] fastq
     Array[File] fastq2
+    Int preemptible_tries = 3
   }
 
   Int cores = 12
@@ -19,6 +20,7 @@ task starFusionDetect {
   Float junction_size = size(junction_file, "GB")
   Int space_needed_gb = 10 + round(2 * (zip_size + fastq_size + junction_size))
   runtime {
+    preemptible: preemptible_tries
     memory: "64GB"
     cpu: cores
     docker: "trinityctat/starfusion:1.10.1"
@@ -56,6 +58,7 @@ workflow wf {
     String fusioninspector_mode  # enum [inspect, validate]
     Array[File] fastq
     Array[File] fastq2
+    Int preemptible_tries = 3
   }
 
   call starFusionDetect {
@@ -67,6 +70,7 @@ workflow wf {
     examine_coding_effect=examine_coding_effect,
     fusioninspector_mode=fusioninspector_mode,
     fastq=fastq,
-    fastq2=fastq2
+    fastq2=fastq2,
+    preemptible_tries=preemptible_tries
   }
 }

@@ -8,11 +8,13 @@ task sequenceToFastq {
     File? fastq1
     File? fastq2
     Boolean unzip_fastqs = false
+    Int preemptible_tries = 3
   }
 
   Int compression_multiplier = if unzip_fastqs then 10 else 1
   Int space_needed_gb = 10 + ceil(2*compression_multiplier*size([bam, fastq1, fastq2], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "16GB"
     bootDiskSizeGb: 25
     docker: "broadinstitute/picard:2.23.6"
@@ -80,6 +82,7 @@ workflow wf {
     File? fastq1
     File? fastq2
     Boolean unzip_fastqs = false
+    Int preemptible_tries = 3
   }
 
   call sequenceToFastq {
@@ -87,6 +90,7 @@ workflow wf {
     bam=bam,
     fastq1=fastq1,
     fastq2=fastq2,
-    unzip_fastqs=unzip_fastqs
+    unzip_fastqs=unzip_fastqs,
+    preemptible_tries=preemptible_tries
   }
 }

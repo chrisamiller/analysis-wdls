@@ -12,10 +12,12 @@ task bamReadcount {
     Int min_mapping_quality = 0
     Int min_base_quality = 20
     String prefix = "NOPREFIX"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([bam, bam_bai, reference, reference_fai, reference_dict, vcf], "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/bam_readcount_helper-cwl:1.1.1"
     memory: "16GB"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -145,6 +147,7 @@ workflow wf {
     Int? min_mapping_quality
     Int? min_base_quality
     String? prefix
+    Int preemptible_tries = 3
   }
 
   call bamReadcount {
@@ -158,6 +161,7 @@ workflow wf {
     vcf=vcf,
     min_mapping_quality=min_mapping_quality,
     min_base_quality=min_base_quality,
-    prefix=prefix
+    prefix=prefix,
+    preemptible_tries=preemptible_tries
   }
 }

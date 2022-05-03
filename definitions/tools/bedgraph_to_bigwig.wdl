@@ -4,10 +4,12 @@ task bedgraphToBigwig {
   input {
     Array[File] methylation_bedgraph
     File reference_sizes
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(methylation_bedgraph, "GB") + size(reference_sizes, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/bisulfite:v1.4"
     memory: "32GB"
     cpu: 1

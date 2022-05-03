@@ -69,6 +69,7 @@ workflow somaticExomeNonhuman {
 
     String tumor_sample_name
     String normal_sample_name
+    Int preemptible_tries = 3
   }
 
   call aen.alignmentExomeNonhuman as tumorAlignmentAndQc {
@@ -92,7 +93,8 @@ workflow somaticExomeNonhuman {
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
     qc_minimum_base_quality=qc_minimum_base_quality,
-    final_name="~{tumor_name}.bam"
+    final_name="~{tumor_name}.bam",
+    preemptible_tries=preemptible_tries
   }
 
   call aen.alignmentExomeNonhuman as normalAlignmentAndQc {
@@ -116,13 +118,15 @@ workflow somaticExomeNonhuman {
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
     qc_minimum_base_quality=qc_minimum_base_quality,
-    final_name="~{normal_name}.bam"
+    final_name="~{normal_name}.bam",
+    preemptible_tries=preemptible_tries
   }
 
   call ile.intervalListExpand as padTargetIntervals {
     input:
     interval_list=target_intervals,
-    roi_padding=target_interval_padding
+    roi_padding=target_interval_padding,
+    preemptible_tries=preemptible_tries
   }
 
   call dvn.detectVariantsNonhuman as detectVariants {
@@ -158,7 +162,8 @@ workflow somaticExomeNonhuman {
     vep_to_table_fields=vep_to_table_fields,
     tumor_sample_name=tumor_sample_name,
     normal_sample_name=normal_sample_name,
-    strelka_exome_mode=true
+    strelka_exome_mode=true,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as tumorBamToCram {
@@ -166,11 +171,13 @@ workflow somaticExomeNonhuman {
     bam=tumorAlignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as tumorIndexCram {
-    input: cram=tumorBamToCram.cram
+    input: cram=tumorBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as normalBamToCram {
@@ -178,11 +185,13 @@ workflow somaticExomeNonhuman {
     bam=normalAlignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as normalIndexCram {
-    input: cram=normalBamToCram.cram
+    input: cram=normalBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

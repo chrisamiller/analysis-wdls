@@ -8,10 +8,12 @@ task normalizeVariants {
 
     File vcf
     File vcf_tbi
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([vcf, vcf_tbi], "GB") + size([reference, reference_fai, reference_dict], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "9GB"
     docker: "broadinstitute/gatk:4.1.8.1"
     disks: "local-disk ~{space_needed_gb} SSD"

@@ -11,6 +11,7 @@ task collectWgsMetrics {
     File? intervals
     Int? minimum_mapping_quality
     Int? minimum_base_quality
+    Int preemptible_tries = 3
   }
 
   Float bam_size = size([bam, bam_bai], "GB")
@@ -18,6 +19,7 @@ task collectWgsMetrics {
   Float intervals_size = size(intervals, "GB")
   Int space_needed_gb = 10 + round(bam_size + reference_size + intervals_size)
   runtime {
+    preemptible: preemptible_tries
     memory: "48GB"
     docker: "broadinstitute/picard:2.23.6"
     disks: "local-disk ~{space_needed_gb} SSD"

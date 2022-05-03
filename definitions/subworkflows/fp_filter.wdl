@@ -20,10 +20,13 @@ workflow fpFilter {
     String variant_caller
     String? sample_name
     Float? min_var_freq
+    Int preemptible_tries = 3
   }
 
   call vs.vcfSanitize as sanitizeVcf {
-    input: vcf=vcf
+    input: 
+    vcf=vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call nv.normalizeVariants {
@@ -32,17 +35,21 @@ workflow fpFilter {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     vcf=sanitizeVcf.sanitized_vcf,
-    vcf_tbi=sanitizeVcf.sanitized_vcf_tbi
+    vcf_tbi=sanitizeVcf.sanitized_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call vd.vtDecompose as decomposeVariants {
     input:
     vcf=normalizeVariants.normalized_vcf,
-    vcf_tbi=normalizeVariants.normalized_vcf_tbi
+    vcf_tbi=normalizeVariants.normalized_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
-    input: vcf=decomposeVariants.decomposed_vcf
+    input: 
+    vcf=decomposeVariants.decomposed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call ff.fpFilter as firstFilter {
@@ -54,15 +61,20 @@ workflow fpFilter {
     vcf=index.indexed_vcf,
     sample_name=sample_name,
     min_var_freq=min_var_freq,
-    output_vcf_basename = variant_caller + "_full"
+    output_vcf_basename = variant_caller + "_full",
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as fpBgzip {
-    input: file=firstFilter.filtered_vcf
+    input: 
+    file=firstFilter.filtered_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as fpIndex {
-    input: vcf=fpBgzip.bgzipped_file
+    input: 
+    vcf=fpBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call sv.selectVariants as hardFilter {
@@ -73,7 +85,8 @@ workflow fpFilter {
     vcf=fpIndex.indexed_vcf,
     vcf_tbi=fpIndex.indexed_vcf_tbi,
     exclude_filtered=true,
-    output_vcf_basename = variant_caller + "_filtered"
+    output_vcf_basename = variant_caller + "_filtered",
+    preemptible_tries=preemptible_tries
   }
 
   output {

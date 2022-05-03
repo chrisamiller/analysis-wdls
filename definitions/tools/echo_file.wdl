@@ -4,6 +4,7 @@ task echoFile {
   input {}
 
   runtime {
+    preemptible: preemptible_tries
     docker: "ubuntu:bionic"
   }
 

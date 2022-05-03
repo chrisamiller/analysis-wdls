@@ -3,9 +3,11 @@ version 1.0
 task intervalsToBed {
   input {
     File interval_list
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     docker: "ubuntu:bionic"
     memory: "4GB"
   }
@@ -31,8 +33,13 @@ task intervalsToBed {
 }
 
 workflow wf {
-  input { File interval_list }
+  input { 
+    File interval_list 
+    Int preemptible_tries = 3
+  }
   call intervalsToBed {
-    input: interval_list=interval_list
+    input: 
+      interval_list=interval_list,
+      preemptible_tries=preemptible_tries
   }
 }

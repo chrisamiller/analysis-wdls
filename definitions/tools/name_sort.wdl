@@ -3,12 +3,14 @@ version 1.0
 task nameSort {
   input {
     File bam
+    Int preemptible_tries = 3
   }
   Int cores = 8
   String outfile = basename(bam, ".bam") + ".NameSorted.bam"
 
   Int input_size_gb = 10 + 5*round(size(bam, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/sambamba-cwl:0.6.4"
     memory: "26GB"
     cpu: cores
@@ -27,8 +29,11 @@ task nameSort {
 workflow wf {
   input {
     File bam
+    Int preemptible_tries = 3
   }
   call nameSort {
-    input: bam=bam
+    input: 
+      bam=bam,
+      preemptible_tries=preemptible_tries
   }
 }

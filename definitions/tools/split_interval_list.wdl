@@ -4,10 +4,12 @@ task splitIntervalList {
   input {
     File interval_list
     Int scatter_count
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(interval_list, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     docker: "broadinstitute/picard:2.24.2"
     memory: "6GB"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -45,11 +47,13 @@ workflow wf {
   input {
     File interval_list
     Int scatter_count
+    Int preemptible_tries = 3
   }
 
   call splitIntervalList {
     input:
     interval_list=interval_list,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 }

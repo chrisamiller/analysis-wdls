@@ -7,10 +7,12 @@ task bisulfiteQc {
     File reference
     File reference_fai
     File QCannotation
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([vcf, bam, reference, reference_fai, QCannotation], "GB"))
   runtime {
+    preemptible: preemptible_tries
     cpu: 1
     memory: "16GB"
     bootDiskSizeGb: 20

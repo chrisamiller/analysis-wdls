@@ -36,6 +36,7 @@ workflow germlineExomeGvcf {
     Int? ploidy
     Int? qc_minimum_mapping_quality
     Int? qc_minimum_base_quality
+    Int preemptible_tries = 3
   }
 
   call ae.alignmentExome as alignmentAndQc {
@@ -62,12 +63,14 @@ workflow germlineExomeGvcf {
     omni_vcf_tbi=omni_vcf_tbi,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
-    qc_minimum_base_quality=qc_minimum_base_quality
+    qc_minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call f.freemix {
     input:
-    verify_bam_id_metrics=alignmentAndQc.verify_bam_id_metrics
+    verify_bam_id_metrics=alignmentAndQc.verify_bam_id_metrics,
+    preemptible_tries=preemptible_tries
   }
 
   call ghi.gatkHaplotypecallerIterator as generateGvcfs {
@@ -81,7 +84,8 @@ workflow germlineExomeGvcf {
     gvcf_gq_bands=gvcf_gq_bands,
     intervals=intervals,
     contamination_fraction=freemix.out,
-    ploidy=ploidy
+    ploidy=ploidy,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -89,11 +93,14 @@ workflow germlineExomeGvcf {
     bam=alignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
-    input: cram=bamToCram.cram
+    input: 
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

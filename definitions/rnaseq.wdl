@@ -45,6 +45,7 @@ workflow rnaseq {
     File gene_transcript_lookup_table
     File refFlat
     File? ribosomal_intervals
+    Int preemptible_tries = 3
   }
 
   scatter(idx in range(length(rna_sequence))) {
@@ -67,7 +68,8 @@ workflow rnaseq {
       reference_index_6ht2=reference_index_6ht2,
       reference_index_7ht2=reference_index_7ht2,
       reference_index_8ht2=reference_index_8ht2,
-      strand=strand
+      strand=strand,
+      preemptible_tries=preemptible_tries
     }
   }
 
@@ -75,31 +77,40 @@ workflow rnaseq {
     input:
     kallisto_index=kallisto_index,
     strand=strand,
-    fastqs=sequenceToTrimmedFastqAndHisatAlignments.fastqs
+    fastqs=sequenceToTrimmedFastqAndHisatAlignments.fastqs,
+    preemptible_tries=preemptible_tries
   }
 
   call ttg.transcriptToGene {
     input:
     transcript_table_h5=kallisto.expression_transcript_h5,
-    gene_transcript_lookup_table=gene_transcript_lookup_table
+    gene_transcript_lookup_table=gene_transcript_lookup_table,
+    preemptible_tries=preemptible_tries
   }
 
   # TODO(john): remove extra sort, as an optimization
   call mb.mergeBams as merge {
-    input: bams=sequenceToTrimmedFastqAndHisatAlignments.aligned_bam
+    input: 
+    bams=sequenceToTrimmedFastqAndHisatAlignments.aligned_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call ss.samtoolsSort as positionSort {
-    input: input_bam=merge.merged_bam
+    input: 
+    input_bam=merge.merged_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call ib.indexBam {
-    input: bam=positionSort.sorted_bam
+    input: 
+    bam=positionSort.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call mdas.markDuplicatesAndSort as markDup {
     input:
-    bam=indexBam.indexed_bam
+    bam=indexBam.indexed_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call st.stringtie {
@@ -107,7 +118,8 @@ workflow rnaseq {
     bam=indexBam.indexed_bam,
     reference_annotation=reference_annotation,
     sample_name=sample_name,
-    strand=strand
+    strand=strand,
+    preemptible_tries=preemptible_tries
   }
 
   call gqm.generateQcMetrics {
@@ -115,7 +127,8 @@ workflow rnaseq {
     refFlat=refFlat,
     ribosomal_intervals=ribosomal_intervals,
     strand=strand,
-    bam=indexBam.indexed_bam
+    bam=indexBam.indexed_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call btb.bamToBigwig as cgpbigwigBamcoverage {
@@ -124,7 +137,8 @@ workflow rnaseq {
     bam_bai=markDup.sorted_bam_bai,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   output {

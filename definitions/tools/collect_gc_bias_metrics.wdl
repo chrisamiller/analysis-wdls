@@ -9,6 +9,7 @@ task collectGcBiasMetrics {
     File reference_fai
     File reference_dict
     String metric_accumulation_level
+    Int preemptible_tries = 3
   }
 
 
@@ -16,6 +17,7 @@ task collectGcBiasMetrics {
   Float reference_size_gb = size([reference, reference_fai, reference_dict], "GB")
   Int space_needed_gb = 10 + round(bam_size_gb + reference_size_gb)
   runtime {
+    preemptible: preemptible_tries
     memory: "48GB"
     docker: "broadinstitute/picard:2.23.6"
     disks: "local-disk ~{space_needed_gb} SSD"

@@ -6,10 +6,12 @@ task addStringAtLine {
     Int line_number
     String some_text
     String output_name = basename(input_file) + ".commented"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size(input_file, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "ubuntu:xenial"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"

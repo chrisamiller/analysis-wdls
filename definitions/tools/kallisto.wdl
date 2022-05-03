@@ -5,11 +5,13 @@ task kallisto {
     File kallisto_index
     Array[Array[File]] fastqs
     String strand = "unstranded"  # [first, second, unstranded]
+    Int preemptible_tries = 3
   }
 
   Int cores = 8
   Int space_needed_gb = 10 + round(size(flatten(fastqs), "GB") + size(kallisto_index, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "32GB"
     cpu: cores
     docker: "quay.io/biocontainers/kallisto:0.46.1--h4f7b962_0"
@@ -38,12 +40,14 @@ workflow wf {
     File kallisto_index
     Array[Array[File]] fastqs
     String strand = "unstranded"  # [first, second, unstranded]
+    Int preemptible_tries = 3
   }
 
   call kallisto {
     input:
     kallisto_index=kallisto_index,
     fastqs=fastqs,
-    strand=strand
+    strand=strand,
+    preemptible_tries=preemptible_tries
   }
 }

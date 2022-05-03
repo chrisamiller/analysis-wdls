@@ -62,7 +62,8 @@ workflow tumorOnlyWgs {
     Float varscan_min_var_freq = 0.05
     Int varscan_min_reads = 2
     Float maximum_population_allele_frequency = 0.001
-}
+    Int preemptible_tries = 3
+  }
 
   call aw.alignmentWgs as alignmentAndQc {
     input:
@@ -89,6 +90,7 @@ workflow tumorOnlyWgs {
     per_target_intervals=per_target_intervals,
     summary_intervals=summary_intervals,
     sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call todv.tumorOnlyDetectVariants as detectVariants {
@@ -117,7 +119,8 @@ workflow tumorOnlyWgs {
     docm_vcf_tbi=docm_vcf_tbi,
     vep_custom_annotations=vep_custom_annotations,
     readcount_minimum_mapping_quality=readcount_minimum_mapping_quality,
-    readcount_minimum_base_quality=readcount_minimum_base_quality
+    readcount_minimum_base_quality=readcount_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -125,11 +128,14 @@ workflow tumorOnlyWgs {
     bam=alignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
-    input: cram=bamToCram.cram
+    input: 
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

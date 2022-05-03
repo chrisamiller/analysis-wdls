@@ -14,10 +14,12 @@ task concordance {
     File bam_2_bai
     File? bam_3
     File? bam_3_bai
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([vcf, reference, reference_fai, reference_dict, bam_1, bam_1_bai, bam_2, bam_2_bai, bam_3, bam_3_bai], "GB"))
   runtime {
+    preemptible: preemptible_tries
     cpu: 1
     memory: "8GB"
     bootDiskSizeGb: 10
@@ -49,6 +51,7 @@ workflow wf {
     File bam_2_bai
     File? bam_3
     File? bam_3_bai
+    Int preemptible_tries = 3
   }
 
   call concordance {
@@ -62,6 +65,7 @@ workflow wf {
     bam_2=bam_2,
     bam_2_bai=bam_2_bai,
     bam_3=bam_3,
-    bam_3_bai=bam_3_bai
+    bam_3_bai=bam_3_bai,
+    preemptible_tries=preemptible_tries
   }
 }

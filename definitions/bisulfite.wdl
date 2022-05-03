@@ -24,6 +24,7 @@ workflow bisulfite {
     Int trimming_min_readlength
     File QCannotation
     Boolean assay_non_cpg_sites = false
+    Int preemptible_tries = 3
   }
 
   scatter(bam in instrument_data_bams) {
@@ -37,21 +38,24 @@ workflow bisulfite {
         adapter_min_overlap=trimming_adapter_min_overlap,
         max_uncalled=trimming_max_uncalled,
         min_readlength=trimming_min_readlength,
-        reference_index=reference
+        reference_index=reference,
+        preemptible_tries=preemptible_tries
       }
     }
   }
 
   call mb.mergeBams as merge {
     input:
-    bams=flatten(bamToTrimmedFastqAndBiscuitAlignments.aligned_bam)
+    bams=flatten(bamToTrimmedFastqAndBiscuitAlignments.aligned_bam),
+    preemptible_tries=preemptible_tries
   }
 
   call bp.biscuitPileup as pileup {
     input:
     bam=merge.merged_bam,
     reference=reference,
-    reference_fai=reference_fai
+    reference_fai=reference_fai,
+    preemptible_tries=preemptible_tries
   }
 
   call bq.bisulfiteQc {
@@ -60,7 +64,8 @@ workflow bisulfite {
     bam=merge.merged_bam,
     reference=reference,
     reference_fai=reference_fai,
-    QCannotation=QCannotation
+    QCannotation=QCannotation,
+    preemptible_tries=preemptible_tries
   }
 
   call bv.bisulfiteVcf2bed as vcf2bed {
@@ -68,13 +73,15 @@ workflow bisulfite {
     vcf=pileup.vcf,
     reference=reference,
     reference_fai=reference_fai,
-    assay_non_cpg_sites=assay_non_cpg_sites
+    assay_non_cpg_sites=assay_non_cpg_sites,
+    preemptible_tries=preemptible_tries
   }
 
   call btb.bedgraphToBigwig {
     input:
     methylation_bedgraph=vcf2bed.methylation_bedgraph,
-    reference_sizes=reference_sizes
+    reference_sizes=reference_sizes,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -82,12 +89,14 @@ workflow bisulfite {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    bam=merge.merged_bam
+    bam=merge.merged_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
     input:
-    cram=bamToCram.cram
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

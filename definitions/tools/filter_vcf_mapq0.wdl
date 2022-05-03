@@ -9,12 +9,14 @@ task filterVcfMapq0 {
     File reference_fai
     File reference_dict
     Float threshold
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float bam_size = size([tumor_bam, tumor_bam_bai], "GB")
   Int space_needed_gb = 10 + round(reference_size + bam_size + 2*size(vcf, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/mapq0-filter:v0.3.1"
     memory: "8GB"
     bootDiskSizeGb: 10
@@ -41,6 +43,7 @@ workflow wf {
     File reference_fai
     File reference_dict
     Float threshold
+    Int preemptible_tries = 3
   }
   call filterVcfMapq0 {
     input:
@@ -50,6 +53,7 @@ workflow wf {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    threshold=threshold
+    threshold=threshold,
+    preemptible_tries=preemptible_tries
   }
 }

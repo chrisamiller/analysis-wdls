@@ -7,10 +7,12 @@ task cnvkitVcfExport {
     Boolean male_reference = false
     File? cnr_file
     String output_name
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size([cns_file, cnr_file], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "8GB"
     docker: "etal/cnvkit:0.9.5"
     disks: "local-disk ~{space_needed_gb} SSD"

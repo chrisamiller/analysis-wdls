@@ -25,6 +25,7 @@ workflow downsampleAndRecall {
     Array[Array[String]] intervals
     Int qc_minimum_mapping_quality
     Int qc_minimum_base_quality
+    Int preemptible_tries = 3
   }
 
   scatter(x in crams_to_downsample) {
@@ -36,7 +37,8 @@ workflow downsampleAndRecall {
       reference_fai=reference_fai,
       reference_dict=reference_dict,
       random_seed=downsample_seed,
-      strategy=downsample_strategy
+      strategy=downsample_strategy,
+      preemptible_tries=preemptible_tries
     }
 
     call ghi.gatkHaplotypecallerIterator as haplotypeCaller {
@@ -53,7 +55,8 @@ workflow downsampleAndRecall {
       max_alternate_alleles=max_alternate_alleles,
       ploidy=ploidy,
       read_filter=read_filter,
-      output_prefix=basename(downsample.downsampled_sam, ".bam") + ".downsampled."
+      output_prefix=basename(downsample.downsampled_sam, ".bam") + ".downsampled.",
+      preemptible_tries=preemptible_tries
     }
 
     call cwm.collectWgsMetrics {
@@ -65,7 +68,8 @@ workflow downsampleAndRecall {
       reference_dict=reference_dict,
       minimum_mapping_quality=qc_minimum_mapping_quality,
       minimum_base_quality=qc_minimum_base_quality,
-      sample_name=basename(downsample.downsampled_sam, ".bam")
+      sample_name=basename(downsample.downsampled_sam, ".bam"),
+      preemptible_tries=preemptible_tries
     }
   }
 

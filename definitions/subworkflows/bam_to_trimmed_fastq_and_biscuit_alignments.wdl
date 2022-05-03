@@ -16,6 +16,7 @@ workflow bamToTrimmedFastqAndBiscuitAlignments {
     Int min_readlength
     String read_group_id
     File reference_index
+    Int preemptible_tries = 3
   }
 
   call btf.bamToFastq {
@@ -30,7 +31,8 @@ workflow bamToTrimmedFastqAndBiscuitAlignments {
     adapter_trim_end=adapter_trim_end,
     adapter_min_overlap=adapter_min_overlap,
     max_uncalled=max_uncalled,
-    min_readlength=min_readlength
+    min_readlength=min_readlength,
+    preemptible_tries=preemptible_tries
   }
 
   call ba.biscuitAlign {
@@ -38,17 +40,21 @@ workflow bamToTrimmedFastqAndBiscuitAlignments {
     reference_index=reference_index,
     fastq1=trimFastq.fastq1,
     fastq2=trimFastq.fastq2,
-    read_group_id=read_group_id
+    read_group_id=read_group_id,
+    preemptible_tries=preemptible_tries
   }
 
   call ib.indexBam {
-    input: bam=biscuitAlign.aligned_bam
+    input: 
+    bam=biscuitAlign.aligned_bam,
+    preemptible_tries=preemptible_tries  
   }
 
   call bm.biscuitMarkdup {
     input:
     bam=indexBam.indexed_bam,
-    bam_bai=indexBam.indexed_bam_bai
+    bam_bai=indexBam.indexed_bam_bai,
+    preemptible_tries=preemptible_tries  
   }
 
   output {

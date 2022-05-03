@@ -4,10 +4,12 @@ task transcriptToGene {
   input {
     File gene_transcript_lookup_table
     File transcript_table_h5
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([transcript_table_h5, gene_transcript_lookup_table], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "2GB"
     cpu: 1
     docker: "mgibio/rnaseq:1.0.0"

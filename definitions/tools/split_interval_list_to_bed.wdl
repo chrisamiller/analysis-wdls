@@ -4,10 +4,12 @@ task splitIntervalListToBed {
   input {
     File interval_list
     Int scatter_count
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(interval_list, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     memory: "6GB"
     docker: "mgibio/cle:v1.4.2"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -26,11 +28,13 @@ workflow wf {
   input {
     File interval_list
     Int scatter_count
+    Int preemptible_tries = 3
   }
 
   call splitIntervalListToBed {
     input:
     interval_list=interval_list,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 }

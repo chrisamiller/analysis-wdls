@@ -19,6 +19,7 @@ workflow hsMetrics {
     File reference
     File reference_fai
     File reference_dict
+    Int preemptible_tries = 3
   }
 
   scatter(interval in summary_intervals) {
@@ -36,7 +37,8 @@ workflow hsMetrics {
       minimum_base_quality=minimum_base_quality,
       metric_accumulation_level="ALL_READS",
       per_target_coverage=false,
-      per_base_coverage=false
+      per_base_coverage=false,
+      preemptible_tries=preemptible_tries
     }
   }
 
@@ -55,7 +57,8 @@ workflow hsMetrics {
       minimum_base_quality=minimum_base_quality,
       metric_accumulation_level="ALL_READS",
       per_target_coverage=false,
-      per_base_coverage=true
+      per_base_coverage=true,
+      preemptible_tries=preemptible_tries
     }
   }
 
@@ -74,7 +77,8 @@ workflow hsMetrics {
       minimum_base_quality=minimum_base_quality,
       metric_accumulation_level="ALL_READS",
       per_target_coverage=true,
-      per_base_coverage=false
+      per_base_coverage=false,
+      preemptible_tries=preemptible_tries
     }
   }
 

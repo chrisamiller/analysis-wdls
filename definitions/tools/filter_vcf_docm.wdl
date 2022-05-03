@@ -6,10 +6,12 @@ task filterVcfDocm {
     File normal_bam
     File tumor_bam
     Boolean filter_docm_variants
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(docm_raw_variants, "GB")*2 + size([normal_bam, tumor_bam], "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/cle:v1.4.2"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -110,6 +112,7 @@ workflow wf {
     File normal_bam
     File tumor_bam
     Boolean filter_docm_variants
+    Int preemptible_tries = 3
   }
 
   call filterVcfDocm {
@@ -117,6 +120,7 @@ workflow wf {
     docm_raw_variants=docm_raw_variants,
     normal_bam=normal_bam,
     tumor_bam=tumor_bam,
-    filter_docm_variants=filter_docm_variants
+    filter_docm_variants=filter_docm_variants,
+    preemptible_tries=preemptible_tries
   }
 }

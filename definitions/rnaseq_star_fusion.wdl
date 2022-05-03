@@ -48,6 +48,7 @@ workflow rnaseqStarFusion {
     String? fusioninspector_mode  # enum [inspect validate]
     File agfusion_database
     Boolean? agfusion_annotate_noncanonical
+    Int preemptible_tries = 3
   }
 
   scatter(sequence in unaligned) {
@@ -59,7 +60,8 @@ workflow rnaseqStarFusion {
       adapter_min_overlap=trimming_adapter_min_overlap,
       max_uncalled=trimming_max_uncalled,
       min_readlength=trimming_min_readlength,
-      unzip_fastqs=unzip_fastqs
+      unzip_fastqs=unzip_fastqs,
+      preemptible_tries=preemptible_tries
     }
 
     call sc.strandednessCheck {
@@ -68,7 +70,8 @@ workflow rnaseqStarFusion {
       kallisto_index=kallisto_index,
       cdna_fasta=cdna_fasta,
       reads1=sequenceToTrimmedFastq.fastq1,
-      reads2=sequenceToTrimmedFastq.fastq2
+      reads2=sequenceToTrimmedFastq.fastq2,
+      preemptible_tries=preemptible_tries
     }
 
     String? attrrg_line = sequence.readgroup
@@ -80,7 +83,8 @@ workflow rnaseqStarFusion {
     star_genome_dir_zip=star_genome_dir_zip,
     reference_annotation=reference_annotation,
     fastq=sequenceToTrimmedFastq.fastq1,
-    fastq2=sequenceToTrimmedFastq.fastq2
+    fastq2=sequenceToTrimmedFastq.fastq2,
+    preemptible_tries=preemptible_tries
   }
 
   call sfd.starFusionDetect {
@@ -90,33 +94,41 @@ workflow rnaseqStarFusion {
     examine_coding_effect=examine_coding_effect,
     fusioninspector_mode=fusioninspector_mode,
     fastq=sequenceToTrimmedFastq.fastq1,
-    fastq2=sequenceToTrimmedFastq.fastq2
+    fastq2=sequenceToTrimmedFastq.fastq2,
+    preemptible_tries=preemptible_tries
   }
 
   call k.kallisto {
     input:
     kallisto_index=kallisto_index,
     strand=strand,
-    fastqs=sequenceToTrimmedFastq.fastqs
+    fastqs=sequenceToTrimmedFastq.fastqs,
+    preemptible_tries=preemptible_tries
   }
 
   call ttg.transcriptToGene {
     input:
     transcript_table_h5=kallisto.expression_transcript_h5,
-    gene_transcript_lookup_table=gene_transcript_lookup_table
+    gene_transcript_lookup_table=gene_transcript_lookup_table,
+    preemptible_tries=preemptible_tries
   }
 
   call ss.samtoolsSort as sortBam {
-    input: input_bam=starAlignFusion.aligned_bam
+    input: 
+    input_bam=starAlignFusion.aligned_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call mdas.markDuplicatesAndSort as markDup {
     input:
-    bam=sortBam.sorted_bam
+    bam=sortBam.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call ib.indexBam {
-    input: bam=markDup.sorted_bam
+    input: 
+    bam=markDup.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call s.stringtie {
@@ -124,7 +136,8 @@ workflow rnaseqStarFusion {
     bam=markDup.sorted_bam,
     reference_annotation=reference_annotation,
     sample_name=sample_name,
-    strand=strand
+    strand=strand,
+    preemptible_tries=preemptible_tries
   }
 
   call gqm.generateQcMetrics {
@@ -132,7 +145,8 @@ workflow rnaseqStarFusion {
     refFlat=refFlat,
     ribosomal_intervals=ribosomal_intervals,
     strand=strand,
-    bam=markDup.sorted_bam
+    bam=markDup.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -140,11 +154,14 @@ workflow rnaseqStarFusion {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    bam=indexBam.indexed_bam
+    bam=indexBam.indexed_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
-    input: cram=bamToCram.cram
+    input: 
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   call btb.bamToBigwig as cgpbigwigBamCoverage {
@@ -153,14 +170,16 @@ workflow rnaseqStarFusion {
     bam_bai=markDup.sorted_bam_bai,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call a.agfusion {
     input:
     fusion_predictions=starFusionDetect.fusion_predictions,
     agfusion_database=agfusion_database,
-    annotate_noncanonical=agfusion_annotate_noncanonical
+    annotate_noncanonical=agfusion_annotate_noncanonical,
+    preemptible_tries=preemptible_tries
   }
 
   output {

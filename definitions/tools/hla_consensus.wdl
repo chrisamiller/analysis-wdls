@@ -6,9 +6,11 @@ task hlaConsensus {
     Array[String]? clinical_mhc_classI_alleles
     Array[String]? clinical_mhc_classII_alleles
     String hla_source_mode  # enum [consensus, clinical_only]
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     docker: "python:3.7.4-slim-buster"
     memory: "4GB"
   }
@@ -267,12 +269,14 @@ workflow wf {
     Array[String] optitype_hla_alleles
     Array[String]? clinical_mhc_classI_alleles
     Array[String]? clinical_mhc_classII_alleles
+    Int preemptible_tries = 3
   }
 
   call hlaConsensus {
     input:
     optitype_hla_alleles=optitype_hla_alleles,
     clinical_mhc_classI_alleles=clinical_mhc_classI_alleles,
-    clinical_mhc_classII_alleles=clinical_mhc_classII_alleles
+    clinical_mhc_classII_alleles=clinical_mhc_classII_alleles,
+    preemptible_tries=preemptible_tries
   }
 }

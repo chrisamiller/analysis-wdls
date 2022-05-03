@@ -27,6 +27,7 @@ workflow qcExome {
     Array[LabelledFile] per_base_intervals
     Array[LabelledFile] per_target_intervals
     Array[LabelledFile] summary_intervals
+    Int preemptible_tries = 3
   }
 
   call cism.collectInsertSizeMetrics {
@@ -36,7 +37,8 @@ workflow qcExome {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    metric_accumulation_level=picard_metric_accumulation_level
+    metric_accumulation_level=picard_metric_accumulation_level,
+    preemptible_tries=preemptible_tries
   }
 
   call casm.collectAlignmentSummaryMetrics {
@@ -46,7 +48,8 @@ workflow qcExome {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    metric_accumulation_level=picard_metric_accumulation_level
+    metric_accumulation_level=picard_metric_accumulation_level,
+    preemptible_tries=preemptible_tries
   }
 
   call chm.collectHsMetrics as collectRoiHsMetrics {
@@ -63,7 +66,8 @@ workflow qcExome {
     per_base_coverage = false,
     output_prefix = "roi",
     minimum_mapping_quality=minimum_mapping_quality,
-    minimum_base_quality=minimum_base_quality
+    minimum_base_quality=minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call hm.hsMetrics as collectDetailedHsMetrics {
@@ -77,13 +81,15 @@ workflow qcExome {
     per_target_intervals=per_target_intervals,
     summary_intervals=summary_intervals,
     minimum_mapping_quality=minimum_mapping_quality,
-    minimum_base_quality=minimum_base_quality
+    minimum_base_quality=minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call sf.samtoolsFlagstat {
     input:
     bam=bam,
-    bam_bai=bam_bai
+    bam_bai=bam_bai,
+    preemptible_tries=preemptible_tries
   }
 
   call sv.selectVariants {
@@ -93,14 +99,16 @@ workflow qcExome {
     reference_dict=reference_dict,
     vcf=omni_vcf,
     vcf_tbi=omni_vcf_tbi,
-    interval_list=target_intervals
+    interval_list=target_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call vbi.verifyBamId {
     input:
     bam=bam,
     bam_bai=bam_bai,
-    vcf=selectVariants.filtered_vcf
+    vcf=selectVariants.filtered_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   output {

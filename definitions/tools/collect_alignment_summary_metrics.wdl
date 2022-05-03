@@ -8,10 +8,12 @@ task collectAlignmentSummaryMetrics {
     File reference_fai
     File reference_dict
     String metric_accumulation_level
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([bam, bam_bai, reference, reference_fai, reference_dict],"GB"))
   runtime{
+    preemptible: preemptible_tries
     memory: "48GB"
     docker: "broadinstitute/picard:2.23.6"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -35,6 +37,7 @@ workflow wf {
     File reference_fai
     File reference_dict
     String metric_accumulation_level
+    Int preemptible_tries = 3
   }
 
   call collectAlignmentSummaryMetrics {
@@ -44,6 +47,7 @@ workflow wf {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    metric_accumulation_level=metric_accumulation_level
+    metric_accumulation_level=metric_accumulation_level,
+    preemptible_tries=preemptible_tries
   }
 }

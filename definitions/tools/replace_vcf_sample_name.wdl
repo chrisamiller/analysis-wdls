@@ -5,10 +5,12 @@ task replaceVcfSampleName {
     File input_vcf
     String sample_to_replace
     String new_sample_name
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(input_vcf, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     memory: "8GB"
     docker: "mgibio/bcftools-cwl:1.12"
     disks: "local-disk ~{space_needed_gb} SSD"

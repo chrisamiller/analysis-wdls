@@ -6,10 +6,12 @@ task bisulfiteVcf2bed {
     File reference
     File reference_fai
     Boolean assay_non_cpg_sites
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([vcf, reference], "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/biscuit:0.3.8"
     memory: "16GB"
     cpu: 2

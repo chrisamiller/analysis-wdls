@@ -16,31 +16,37 @@ workflow germlineFilterVcf {
     File reference
     File reference_fai
     File reference_dict
+    Int preemptible_tries = 3
   }
 
   call fvcv.filterVcfCodingVariant as codingVariantFilter {
-    input: vcf=annotated_vcf
+    input: vcf=annotated_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call fvcaf.filterVcfCustomAlleleFreq as gnomadFrequencyFilter {
     input:
     vcf=codingVariantFilter.filtered_vcf,
     maximum_population_allele_frequency=filter_gnomAD_maximum_population_allele_frequency,
-    field_name=gnomad_field_name
+    field_name=gnomad_field_name,
+    preemptible_tries=preemptible_tries
   }
 
   call sr.stagedRename as setFilteredVcfName {
     input:
     original=gnomadFrequencyFilter.filtered_vcf,
-    name="annotated.filtered.vcf"
+    name="annotated.filtered.vcf",
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as bgzipFilteredVcf {
-    input: file=setFilteredVcfName.replacement
+    input: file=setFilteredVcfName.replacement,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexFilteredVcf {
-    input: vcf=bgzipFilteredVcf.bgzipped_file
+    input: vcf=bgzipFilteredVcf.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call sv.selectVariants as limitVariants {
@@ -52,7 +58,8 @@ workflow germlineFilterVcf {
     vcf_tbi=indexFilteredVcf.indexed_vcf_tbi,
     interval_list=limit_variant_intervals,
     exclude_filtered=true,
-    output_vcf_basename="annotated.filtered.final"
+    output_vcf_basename="annotated.filtered.final",
+    preemptible_tries=preemptible_tries
   }
 
   output {

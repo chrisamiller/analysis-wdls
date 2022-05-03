@@ -7,10 +7,12 @@ task optitypeDna {
     File cram_crai
     File reference
     File reference_fai
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(5*size([cram, cram_crai, reference, reference_fai], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "64GB"
     docker: "mgibio/immuno_tools-cwl:1.0.1"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -35,6 +37,7 @@ workflow wf {
     File cram_crai
     File reference
     File reference_fai
+    Int preemptible_tries = 3
   }
   call optitypeDna {
     input:
@@ -43,5 +46,6 @@ workflow wf {
     cram_crai=cram_crai,
     reference=reference,
     reference_fai=reference_fai,
+    preemptible_tries=preemptible_tries
   }
 }

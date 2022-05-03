@@ -56,6 +56,7 @@ workflow pvacseq {
     Array[String] variants_to_table_genotype_fields = ["GT", "AD", "AF", "DP", "RAD", "RAF", "RDP", "GX", "TX"]
     Array[String] vep_to_table_fields = ["HGVSc", "HGVSp"]
     Float? tumor_purity
+    Int preemptible_tries = 3
   }
 
   call br.bamReadcount as tumorRnaBamReadcount {
@@ -69,7 +70,8 @@ workflow pvacseq {
     bam=rnaseq_bam,
     bam_bai=rnaseq_bam_bai,
     min_base_quality=readcount_minimum_base_quality,
-    min_mapping_quality=readcount_minimum_mapping_quality
+    min_mapping_quality=readcount_minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call vra.vcfReadcountAnnotator as addTumorRnaBamReadcountToVcf {
@@ -78,7 +80,8 @@ workflow pvacseq {
     snv_bam_readcount_tsv=tumorRnaBamReadcount.snv_bam_readcount_tsv,
     indel_bam_readcount_tsv=tumorRnaBamReadcount.indel_bam_readcount_tsv,
     data_type="RNA",
-    sample_name=sample_name
+    sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call vea.vcfExpressionAnnotator as addGeneExpressionDataToVcf {
@@ -87,7 +90,8 @@ workflow pvacseq {
     expression_file=gene_expression_file,
     expression_tool=expression_tool,
     data_type="gene",
-    sample_name=sample_name
+    sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call vea.vcfExpressionAnnotator as addTranscriptExpressionDataToVcf {
@@ -96,11 +100,14 @@ workflow pvacseq {
     expression_file=transcript_expression_file,
     expression_tool=expression_tool,
     data_type="transcript",
-    sample_name=sample_name
+    sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
-    input: vcf=addTranscriptExpressionDataToVcf.annotated_expression_vcf
+    input: 
+    vcf=addTranscriptExpressionDataToVcf.annotated_expression_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call p.pvacseq as ps {
@@ -137,7 +144,8 @@ workflow pvacseq {
     run_reference_proteome_similarity=run_reference_proteome_similarity,
     blastp_db=blastp_db,
     n_threads=n_threads,
-    tumor_purity=tumor_purity
+    tumor_purity=tumor_purity,
+    preemptible_tries=preemptible_tries
   }
 
   call vtt.variantsToTable {
@@ -148,7 +156,8 @@ workflow pvacseq {
     vcf=index.indexed_vcf,
     vcf_tbi=index.indexed_vcf_tbi,
     fields=variants_to_table_fields,
-    genotype_fields=variants_to_table_genotype_fields
+    genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call avftt.addVepFieldsToTable {
@@ -156,7 +165,8 @@ workflow pvacseq {
     vcf=index.indexed_vcf,
     vep_fields=vep_to_table_fields,
     tsv=variantsToTable.variants_tsv,
-    prefix="pvacseq"
+    prefix="pvacseq",
+    preemptible_tries=preemptible_tries
   }
 
   output {

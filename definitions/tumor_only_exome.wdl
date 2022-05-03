@@ -59,6 +59,7 @@ workflow tumorOnlyExome {
     Int? qc_minimum_base_quality
     Int? readcount_minimum_mapping_quality
     Int? readcount_minimum_base_quality
+    Int preemptible_tries = 3
   }
 
   call ae.alignmentExome as alignmentAndQc {
@@ -85,13 +86,15 @@ workflow tumorOnlyExome {
     omni_vcf_tbi=omni_vcf_tbi,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
-    qc_minimum_base_quality=qc_minimum_base_quality
+    qc_minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call ile.intervalListExpand as padTargetIntervals {
     input:
     interval_list=target_intervals,
-    roi_padding=target_interval_padding
+    roi_padding=target_interval_padding,
+    preemptible_tries=preemptible_tries
   }
 
   call todv.tumorOnlyDetectVariants as detectVariants {
@@ -122,7 +125,8 @@ workflow tumorOnlyExome {
     docm_vcf_tbi=docm_vcf_tbi,
     vep_custom_annotations=vep_custom_annotations,
     readcount_minimum_mapping_quality=readcount_minimum_mapping_quality,
-    readcount_minimum_base_quality=readcount_minimum_base_quality
+    readcount_minimum_base_quality=readcount_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -130,12 +134,14 @@ workflow tumorOnlyExome {
     bam=alignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
     input:
-    cram=bamToCram.cram
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

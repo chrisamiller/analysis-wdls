@@ -96,6 +96,7 @@ workflow somaticExome {
     File? validated_variants_tbi
 
     Int? cnvkit_target_average_size
+    Int preemptible_tries = 3
   }
 
   call s2b.sequenceToBqsr as tumorAlignment {
@@ -113,7 +114,8 @@ workflow somaticExome {
     trimming=trimming,
     bqsr_known_sites=bqsr_known_sites,
     bqsr_known_sites_tbi=bqsr_known_sites_tbi,
-    final_name=tumor_name
+    final_name=tumor_name,
+    preemptible_tries=preemptible_tries
   }
   call qe.qcExome as tumorQc {
     input:
@@ -131,7 +133,8 @@ workflow somaticExome {
     omni_vcf_tbi=omni_vcf_tbi,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     minimum_mapping_quality=qc_minimum_mapping_quality,
-    minimum_base_quality=qc_minimum_base_quality
+    minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call s2b.sequenceToBqsr as normalAlignment {
@@ -149,7 +152,8 @@ workflow somaticExome {
     trimming=trimming,
     bqsr_known_sites=bqsr_known_sites,
     bqsr_known_sites_tbi=bqsr_known_sites_tbi,
-    final_name=normal_name
+    final_name=normal_name,
+    preemptible_tries=preemptible_tries
   }
 
   call qe.qcExome as normalQc {
@@ -168,7 +172,8 @@ workflow somaticExome {
     omni_vcf_tbi=omni_vcf_tbi,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     minimum_mapping_quality=qc_minimum_mapping_quality,
-    minimum_base_quality=qc_minimum_base_quality
+    minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call c.concordance {
@@ -180,13 +185,15 @@ workflow somaticExome {
     bam_1_bai=tumorAlignment.final_bam_bai,
     bam_2=normalAlignment.final_bam,
     bam_2_bai=normalAlignment.final_bam_bai,
-    vcf=somalier_vcf
+    vcf=somalier_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call ile.intervalListExpand as padTargetIntervals {
     input:
     interval_list=target_intervals,
-    roi_padding=target_interval_padding
+    roi_padding=target_interval_padding,
+    preemptible_tries=preemptible_tries
   }
 
   call dv.detectVariants {
@@ -228,7 +235,8 @@ workflow somaticExome {
     normal_sample_name=normal_sample_name,
     vep_custom_annotations=vep_custom_annotations,
     validated_variants=validated_variants,
-    strelka_exome_mode=true
+    strelka_exome_mode=true,
+    preemptible_tries=preemptible_tries
   }
 
   call cb.cnvkitBatch as cnvkit {
@@ -239,7 +247,8 @@ workflow somaticExome {
     normal_bam_bai=normalAlignment.final_bam_bai,
     reference_fasta=reference,
     bait_intervals=bait_intervals,
-    target_average_size=cnvkit_target_average_size
+    target_average_size=cnvkit_target_average_size,
+    preemptible_tries=preemptible_tries
   }
 
   call ms.mantaSomatic as manta {
@@ -254,7 +263,8 @@ workflow somaticExome {
     call_regions=manta_call_regions,
     call_regions_tbi=manta_call_regions_tbi,
     non_wgs=manta_non_wgs,
-    output_contigs=manta_output_contigs
+    output_contigs=manta_output_contigs,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as tumorBamToCram {
@@ -262,11 +272,14 @@ workflow somaticExome {
     bam=tumorAlignment.final_bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as tumorIndexCram {
-    input: cram=tumorBamToCram.cram
+    input: 
+    cram=tumorBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as normalBamToCram {
@@ -274,11 +287,14 @@ workflow somaticExome {
     bam=normalAlignment.final_bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as normalIndexCram {
-    input: cram=normalBamToCram.cram
+    input: 
+    cram=normalBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

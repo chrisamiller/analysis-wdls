@@ -6,10 +6,12 @@ task pindelSomaticFilter {
     File reference_fai
     File reference_dict
     File pindel_output_summary
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([reference, reference_fai, reference_dict, pindel_output_summary], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "16GB"
     docker: "mgibio/cle:v1.3.1"
     disks: "local-disk ~{space_needed_gb} SSD"

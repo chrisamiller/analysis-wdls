@@ -17,6 +17,7 @@ workflow cnvkitSingleSample {
     File? reference_cnn
     String cnvkit_vcf_name = "cnvkit.vcf"
     String segment_filter  # enum ["ampdel" "ci" "cn" "sem"]
+    Int preemptible_tries = 3
   }
 
   call cb.cnvkitBatch as cnvkitMain {
@@ -29,7 +30,8 @@ workflow cnvkitSingleSample {
     drop_low_coverage=drop_low_coverage,
     male_reference=male_reference,
     reference_fasta=reference,
-    reference_cnn=reference_cnn
+    reference_cnn=reference_cnn,
+    preemptible_tries=preemptible_tries  
   }
 
   call cve.cnvkitVcfExport as cnsToVcf {
@@ -38,7 +40,8 @@ workflow cnvkitSingleSample {
     cns_file=cnvkitMain.tumor_segmented_ratios,
     male_reference=male_reference,
     cnr_file=cnvkitMain.tumor_bin_level_ratios,
-    output_name=cnvkit_vcf_name
+    output_name=cnvkit_vcf_name,
+    preemptible_tries=preemptible_tries  
   }
 
   output {

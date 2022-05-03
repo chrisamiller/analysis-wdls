@@ -3,10 +3,12 @@ version 1.0
 task extractHlaAlleles {
   input {
     File file
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(file, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "2GB"
     docker: "ubuntu:xenial"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -24,6 +26,13 @@ task extractHlaAlleles {
 }
 
 workflow wf {
-  input { File file }
-  call extractHlaAlleles { input: file=file }
+  input { 
+    File file
+    Int preemptible_tries = 3
+  }
+  call extractHlaAlleles { 
+    input: 
+      file=file,
+      preemptible_tries=preemptible_tries
+  }
 }

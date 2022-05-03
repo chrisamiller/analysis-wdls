@@ -3,9 +3,11 @@ version 1.0
 task vcfSanitize {
   input {
     File vcf
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     cpu: 1
     docker: "mgibio/samtools-cwl:1.0.0"

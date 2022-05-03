@@ -29,6 +29,7 @@ workflow strelkaAndPostProcessing {
 
     File? call_regions
     File? call_regions_tbi
+    Int preemptible_tries = 3
   }
 
   call s.strelka {
@@ -43,37 +44,45 @@ workflow strelkaAndPostProcessing {
     exome_mode=exome_mode,
     cpu_reserved=cpu_reserved,
     call_regions=call_regions,
-    call_regions_tbi=call_regions_tbi
+    call_regions_tbi=call_regions_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   scatter(vcf in [strelka.snvs, strelka.indels]) {
     call spv.strelkaProcessVcf as process {
-      input: vcf=vcf
+      input: 
+      vcf=vcf,
+      preemptible_tries=preemptible_tries
     }
   }
 
   call mv.mergeVcf as merge {
     input:
     vcfs=process.processed_vcf,
-    vcf_tbis=process.processed_vcf_tbi
+    vcf_tbis=process.processed_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call rvsn.replaceVcfSampleName as renameTumorSample {
     input:
     input_vcf=merge.merged_vcf,
     sample_to_replace="TUMOR",
-    new_sample_name=tumor_sample_name
+    new_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call rvsn.replaceVcfSampleName as renameNormalSample {
     input:
     input_vcf=renameTumorSample.renamed_vcf,
     sample_to_replace="NORMAL",
-    new_sample_name=normal_sample_name
+    new_sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexFull {
-    input: vcf=renameNormalSample.renamed_vcf
+    input: 
+    vcf=renameNormalSample.renamed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call sv.selectVariants as regionFilter {
@@ -83,7 +92,8 @@ workflow strelkaAndPostProcessing {
     reference_dict=reference_dict,
     vcf=indexFull.indexed_vcf,
     vcf_tbi=indexFull.indexed_vcf_tbi,
-    interval_list=interval_list
+    interval_list=interval_list,
+    preemptible_tries=preemptible_tries
   }
 
   call ff.fpFilter as filter {
@@ -96,7 +106,8 @@ workflow strelkaAndPostProcessing {
     vcf=regionFilter.filtered_vcf,
     vcf_tbi=regionFilter.filtered_vcf_tbi,
     sample_name=tumor_sample_name,
-    variant_caller="strelka"
+    variant_caller="strelka",
+    preemptible_tries=preemptible_tries
   }
 
   output {

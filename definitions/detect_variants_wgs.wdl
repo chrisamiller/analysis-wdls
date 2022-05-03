@@ -9,7 +9,7 @@ import "subworkflows/vcf_readcount_annotator.wdl" as vra
 import "tools/add_vep_fields_to_table.wdl" as avftt
 import "tools/bam_readcount.wdl" as br
 import "tools/bgzip.wdl" as b
-import "tools/combine_variants_wgs.wdl" as cvw
+import "tools/combine_variants.wdl" as cv
 import "tools/docm_add_variants.wdl" as dav
 import "tools/index_vcf.wdl" as iv
 import "tools/variants_to_table.wdl" as vtt
@@ -67,7 +67,8 @@ workflow detectVariantsWgs {
     Array[VepCustomAnnotation] vep_custom_annotations
     File? validated_variants
     File? validated_variants_tbi
-  }
+    Int preemptible_tries = 3
+}
 
   call m.mutect {
     input:
@@ -80,7 +81,8 @@ workflow detectVariantsWgs {
     normal_bam_bai=normal_bam_bai,
     interval_list=roi_intervals,
     scatter_count=scatter_count,
-    tumor_sample_name=tumor_sample_name
+    tumor_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call sapp.strelkaAndPostProcessing as strelka {
@@ -101,7 +103,8 @@ workflow detectVariantsWgs {
     exome_mode=strelka_exome_mode,
     cpu_reserved=strelka_cpu_reserved,
     call_regions=strelka_call_regions,
-    call_regions_tbi=strelka_call_regions_tbi
+    call_regions_tbi=strelka_call_regions_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call vpapp.varscanPreAndPostProcessing as varscan {
@@ -124,7 +127,8 @@ workflow detectVariantsWgs {
     min_coverage=varscan_min_coverage,
     min_var_freq=varscan_min_var_freq,
     p_value=varscan_p_value,
-    max_normal_freq=varscan_max_normal_freq
+    max_normal_freq=varscan_max_normal_freq,
+    preemptible_tries=preemptible_tries
   }
 
   call dc.docmCle as docm {
@@ -142,10 +146,11 @@ workflow detectVariantsWgs {
     interval_list=roi_intervals,
     docm_vcf=docm_vcf,
     docm_vcf_tbi=docm_vcf_tbi,
-    filter_docm_variants=filter_docm_variants
+    filter_docm_variants=filter_docm_variants,
+    preemptible_tries=preemptible_tries
   }
 
-  call cvw.combineVariantsWgs as combine {
+  call cv.combineVariants as combine {
     input:
     reference=reference,
     reference_fai=reference_fai,
@@ -155,7 +160,8 @@ workflow detectVariantsWgs {
     strelka_vcf=strelka.filtered_vcf,
     strelka_vcf_tbi=strelka.filtered_vcf_tbi,
     varscan_vcf=varscan.filtered_vcf,
-    varscan_vcf_tbi=varscan.filtered_vcf_tbi
+    varscan_vcf_tbi=varscan.filtered_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call dav.docmAddVariants {
@@ -166,18 +172,21 @@ workflow detectVariantsWgs {
     callers_vcf=combine.combined_vcf,
     callers_vcf_tbi=combine.combined_vcf_tbi,
     docm_vcf=docm.docm_variants_vcf,
-    docm_vcf_tbi=docm.docm_variants_vcf_tbi
+    docm_vcf_tbi=docm.docm_variants_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call vd.vtDecompose as decompose {
     input:
     vcf=docmAddVariants.merged_vcf,
-    vcf_tbi=docmAddVariants.merged_vcf_tbi
+    vcf_tbi=docmAddVariants.merged_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as decomposeIndex {
     input:
-    vcf=decompose.decomposed_vcf
+    vcf=decompose.decomposed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call v.vep as annotateVariants {
@@ -194,7 +203,8 @@ workflow detectVariantsWgs {
     coding_only=annotate_coding_only,
     custom_annotations=vep_custom_annotations,
     pick=vep_pick,
-    plugins=vep_plugins
+    plugins=vep_plugins,
+    preemptible_tries=preemptible_tries
   }
 
   call br.bamReadcount as tumorBamReadcount {
@@ -207,7 +217,8 @@ workflow detectVariantsWgs {
     bam=tumor_bam,
     bam_bai=tumor_bam_bai,
     min_base_quality=readcount_minimum_base_quality,
-    min_mapping_quality=readcount_minimum_mapping_quality
+    min_mapping_quality=readcount_minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call br.bamReadcount as normalBamReadcount {
@@ -220,7 +231,8 @@ workflow detectVariantsWgs {
     bam=normal_bam,
     bam_bai=normal_bam_bai,
     min_base_quality=readcount_minimum_base_quality,
-    min_mapping_quality=readcount_minimum_mapping_quality
+    min_mapping_quality=readcount_minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call vra.vcfReadcountAnnotator as addTumorBamReadcountToVcf {
@@ -229,7 +241,8 @@ workflow detectVariantsWgs {
     snv_bam_readcount_tsv=tumorBamReadcount.snv_bam_readcount_tsv,
     indel_bam_readcount_tsv=tumorBamReadcount.indel_bam_readcount_tsv,
     data_type="DNA",
-    sample_name=tumor_sample_name
+    sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call vra.vcfReadcountAnnotator as addNormalBamReadcountToVcf {
@@ -238,11 +251,14 @@ workflow detectVariantsWgs {
     snv_bam_readcount_tsv=normalBamReadcount.snv_bam_readcount_tsv,
     indel_bam_readcount_tsv=normalBamReadcount.indel_bam_readcount_tsv,
     data_type="DNA",
-    sample_name=normal_sample_name
+    sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
-    input: vcf=addNormalBamReadcountToVcf.annotated_bam_readcount_vcf
+    input: 
+    vcf=addNormalBamReadcountToVcf.annotated_bam_readcount_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call fv.filterVcf {
@@ -265,15 +281,20 @@ workflow detectVariantsWgs {
     tumor_sample_name=tumor_sample_name,
     gnomad_field_name=gnomad_field_name,
     validated_variants=validated_variants,
-    validated_variants_tbi=validated_variants_tbi
+    validated_variants_tbi=validated_variants_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as annotatedFilterBgzip {
-    input: file=filterVcf.filtered_vcf
+    input: 
+    file=filterVcf.filtered_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as annotatedFilterIndex {
-    input: vcf=annotatedFilterBgzip.bgzipped_file
+    input: 
+    vcf=annotatedFilterBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call vtt.variantsToTable {
@@ -284,14 +305,16 @@ workflow detectVariantsWgs {
     vcf=annotatedFilterIndex.indexed_vcf,
     vcf_tbi=annotatedFilterIndex.indexed_vcf_tbi,
     fields=variants_to_table_fields,
-    genotype_fields=variants_to_table_genotype_fields
+    genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call avftt.addVepFieldsToTable {
     input:
     vcf=annotatedFilterIndex.indexed_vcf,
     tsv=variantsToTable.variants_tsv,
-    vep_fields=vep_to_table_fields
+    vep_fields=vep_to_table_fields,
+    preemptible_tries=preemptible_tries
   }
 
   output {

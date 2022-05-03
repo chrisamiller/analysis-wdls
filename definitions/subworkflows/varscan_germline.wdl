@@ -19,11 +19,13 @@ workflow varscanGermline {
     Int min_reads = 2
     Float p_value = 0.99
     String sample_name
+    Int preemptible_tries = 3
   }
 
   call itb.intervalsToBed {
     input:
-    interval_list=interval_list
+    interval_list=interval_list,
+    preemptible_tries=preemptible_tries
   }
 
   call vg.varscanGermline as varscan {
@@ -39,12 +41,14 @@ workflow varscanGermline {
     min_var_freq=min_var_freq,
     min_reads=min_reads,
     p_value=p_value,
-    sample_name=sample_name
+    sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call bi.bgzipAndIndex {
     input:
-    vcf=varscan.variants
+    vcf=varscan.variants,
+    preemptible_tries=preemptible_tries
   }
 
   call ff.fpFilter as filter {
@@ -58,7 +62,8 @@ workflow varscanGermline {
     vcf_tbi=bgzipAndIndex.indexed_vcf_tbi,
     variant_caller="varscan",
     sample_name=sample_name,
-    min_var_freq=min_var_freq
+    min_var_freq=min_var_freq,
+    preemptible_tries=preemptible_tries
   }
 
   output {

@@ -20,17 +20,21 @@ workflow phaseVcf {
     File bam_bai  # could be .crai
     String normal_sample_name
     String tumor_sample_name
+    Int preemptible_tries = 3
   }
 
   call rvsn.replaceVcfSampleName as renameGermlineVcf {
     input:
     input_vcf=germline_vcf,
     sample_to_replace=normal_sample_name,
-    new_sample_name=tumor_sample_name
+    new_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexRenamedGermline {
-    input: vcf=renameGermlineVcf.renamed_vcf
+    input: 
+    vcf=renameGermlineVcf.renamed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call sev.selectVariants as selectSomaticTumorSample {
@@ -41,11 +45,14 @@ workflow phaseVcf {
     vcf=somatic_vcf,
     vcf_tbi=somatic_vcf_tbi,
     output_vcf_basename="somatic_tumor_only",
-    samples_to_include=[tumor_sample_name]
+    samples_to_include=[tumor_sample_name],
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexFilteredSomatic {
-    input: vcf=selectSomaticTumorSample.filtered_vcf
+    input: 
+    vcf=selectSomaticTumorSample.filtered_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call pcv.pvacseqCombineVariants as combineVariants {
@@ -56,17 +63,21 @@ workflow phaseVcf {
     germline_vcf=indexRenamedGermline.indexed_vcf,
     germline_vcf_tbi=indexRenamedGermline.indexed_vcf_tbi,
     somatic_vcf=indexFilteredSomatic.indexed_vcf,
-    somatic_vcf_tbi=indexFilteredSomatic.indexed_vcf_tbi
+    somatic_vcf_tbi=indexFilteredSomatic.indexed_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call sov.sortVcf as sort {
     input:
     vcf=combineVariants.combined_vcf,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call bi.bgzipAndIndex {
-    input: vcf=sort.sorted_vcf
+    input: 
+    vcf=sort.sorted_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call rbp.readBackedPhasing  {
@@ -77,11 +88,14 @@ workflow phaseVcf {
     bam=bam,
     bam_index=bam_bai,
     vcf=bgzipAndIndex.indexed_vcf,
-    vcf_tbi=bgzipAndIndex.indexed_vcf_tbi
+    vcf_tbi=bgzipAndIndex.indexed_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call bi.bgzipAndIndex as bgzipAndIndexPhasedVcf {
-    input: vcf=readBackedPhasing.phased_vcf
+    input: 
+    vcf=readBackedPhasing.phased_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   output {

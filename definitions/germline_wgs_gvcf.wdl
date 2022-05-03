@@ -39,6 +39,7 @@ workflow germlineWgsGvcf {
     Array[LabelledFile] per_base_intervals
     Array[LabelledFile] per_target_intervals
     Array[LabelledFile] summary_intervals
+    Int preemptible_tries = 3
   }
 
   call aw.alignmentWgs as alignmentAndQc {
@@ -64,12 +65,14 @@ workflow germlineWgsGvcf {
     minimum_base_quality=minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call f.freemix {
     input:
-    verify_bam_id_metrics=alignmentAndQc.verify_bam_id_metrics
+    verify_bam_id_metrics=alignmentAndQc.verify_bam_id_metrics,
+    preemptible_tries=preemptible_tries
   }
 
   call ghi.gatkHaplotypecallerIterator as generateGvcfs {
@@ -83,7 +86,8 @@ workflow germlineWgsGvcf {
     gvcf_gq_bands=gvcf_gq_bands,
     intervals=intervals,
     ploidy=ploidy,
-    contamination_fraction=freemix.out
+    contamination_fraction=freemix.out,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -91,12 +95,14 @@ workflow germlineWgsGvcf {
     bam=alignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
     input:
-    cram=bamToCram.cram
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

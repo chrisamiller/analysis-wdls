@@ -6,10 +6,12 @@ task filterSvVcfBlocklistBedpe {
     File? blocklist_bedpe
     Int slope = 100
     String output_vcf_basename = "blocklist_filtered"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10
   runtime {
+    preemptible: preemptible_tries
     memory: "8GB"
     docker: "mgibio/basespace_chromoseq:v12"
     disks: "local-disk ~{space_needed_gb} SSD"

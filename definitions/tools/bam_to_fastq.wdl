@@ -1,11 +1,15 @@
 version 1.0
 
 task bamToFastq {
-  input { File bam }
+  input { 
+    File bam
+    Int preemptible_tries = 3
+  }
 
   # ran into issue at 3*, bump to 10*
   Int space_needed_gb = 10 + round(10*size(bam, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/rnaseq:1.0.0"
     cpu: 1
     memory: "6GB"
@@ -26,6 +30,13 @@ task bamToFastq {
 }
 
 workflow wf {
-  input { File bam }
-  call bamToFastq { input: bam=bam }
+  input { 
+    File bam 
+    Int preemptible_tries = 3
+  }
+  call bamToFastq { 
+    input: 
+      bam=bam,
+      preemptible_tries=preemptible_tries
+  }
 }

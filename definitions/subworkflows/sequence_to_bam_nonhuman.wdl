@@ -8,7 +8,7 @@ import "../tools/name_sort.wdl" as ns
 import "../tools/mark_duplicates_and_sort.wdl" as mdas
 import "../tools/index_bam.wdl" as ib
 
-workflow sequenceToBqsrNonhuman {
+workflow sequenceToBamNonhuman {
   input {
     Array[SequenceData] unaligned
     File reference
@@ -20,6 +20,7 @@ workflow sequenceToBqsrNonhuman {
     File reference_0123
     TrimmingOptions? trimming
     String final_name = "final.bam"
+    Int preemptible_tries = 3
   }
 
   scatter(sequence in unaligned) {
@@ -33,30 +34,35 @@ workflow sequenceToBqsrNonhuman {
       reference_bwt=reference_bwt,
       reference_pac=reference_pac,
       reference_0123=reference_0123,
-      trimming=trimming
+      trimming=trimming,
+      preemptible_tries=preemptible_tries
     }
   }
 
   call mb.mergeBams as merge {
     input:
     bams=align.aligned_bam,
-    name=final_name
+    name=final_name,
+    preemptible_tries=preemptible_tries
   }
 
   call ns.nameSort {
     input:
-    bam=merge.merged_bam
+    bam=merge.merged_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call mdas.markDuplicatesAndSort {
     input:
     bam=nameSort.name_sorted_bam,
-    output_name=final_name
+    output_name=final_name,
+    preemptible_tries=preemptible_tries
   }
 
   call ib.indexBam {
     input:
-    bam=markDuplicatesAndSort.sorted_bam
+    bam=markDuplicatesAndSort.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   output {

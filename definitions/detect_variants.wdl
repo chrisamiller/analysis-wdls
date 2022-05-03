@@ -75,6 +75,7 @@ workflow detectVariants {
     # Both or neither
     File? validated_variants
     File? validated_variants_tbi
+    Int preemptible_tries = 3
   }
 
   call m.mutect {
@@ -88,7 +89,8 @@ workflow detectVariants {
     normal_bam=normal_bam,
     normal_bam_bai=normal_bam_bai,
     interval_list=roi_intervals,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 
   call sapp.strelkaAndPostProcessing as strelka {
@@ -104,7 +106,8 @@ workflow detectVariants {
     exome_mode=strelka_exome_mode,
     cpu_reserved=strelka_cpu_reserved,
     normal_sample_name=normal_sample_name,
-    tumor_sample_name=tumor_sample_name
+    tumor_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call vpapp.varscanPreAndPostProcessing as varscan {
@@ -124,7 +127,8 @@ workflow detectVariants {
     p_value=varscan_p_value,
     max_normal_freq=varscan_max_normal_freq,
     normal_sample_name=normal_sample_name,
-    tumor_sample_name=tumor_sample_name
+    tumor_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call dc.docmCle as docm {
@@ -139,7 +143,8 @@ workflow detectVariants {
     docm_vcf=docm_vcf,
     docm_vcf_tbi=docm_vcf_tbi,
     interval_list=roi_intervals,
-    filter_docm_variants=filter_docm_variants
+    filter_docm_variants=filter_docm_variants,
+    preemptible_tries=preemptible_tries
   }
 
   call cv.combineVariants as combine {
@@ -156,6 +161,7 @@ workflow detectVariants {
 
     varscan_vcf=varscan.filtered_vcf,
     varscan_vcf_tbi=varscan.filtered_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call dav.docmAddVariants as addDocmVariants {
@@ -166,17 +172,21 @@ workflow detectVariants {
     docm_vcf=docm.docm_variants_vcf,
     docm_vcf_tbi=docm.docm_variants_vcf_tbi,
     callers_vcf=combine.combined_vcf,
-    callers_vcf_tbi=combine.combined_vcf_tbi
+    callers_vcf_tbi=combine.combined_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call vd.vtDecompose as decompose {
     input:
     vcf=addDocmVariants.merged_vcf,
-    vcf_tbi=addDocmVariants.merged_vcf_tbi
+    vcf_tbi=addDocmVariants.merged_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as decomposeIndex {
-    input: vcf=decompose.decomposed_vcf
+    input: 
+    vcf=decompose.decomposed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call v.vep as annotateVariants {
@@ -193,7 +203,8 @@ workflow detectVariants {
     ensembl_version=vep_ensembl_version,
     pick=vep_pick,
     plugins=vep_plugins,
-    synonyms_file=synonyms_file
+    synonyms_file=synonyms_file,
+    preemptible_tries=preemptible_tries
   }
 
   call vr.vcfReadcount {
@@ -209,7 +220,8 @@ workflow detectVariants {
     tumor_bam=tumor_bam,
     tumor_bam_bai=tumor_bam_bai,
     minimum_base_quality=readcount_minimum_base_quality,
-    minimum_mapping_quality=readcount_minimum_mapping_quality
+    minimum_mapping_quality=readcount_minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call fv.filterVcf {
@@ -231,15 +243,20 @@ workflow detectVariants {
     normal_sample_name=normal_sample_name,
     tumor_sample_name=tumor_sample_name,
     gnomad_field_name=gnomad_field_name,
-    validated_variants=validated_variants
+    validated_variants=validated_variants,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as annotatedFilterBgzip {
-    input: file=filterVcf.filtered_vcf
+    input: 
+    file=filterVcf.filtered_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as annotatedFilterIndex {
-    input: vcf=annotatedFilterBgzip.bgzipped_file
+    input: 
+    vcf=annotatedFilterBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call vtt.variantsToTable {
@@ -250,14 +267,16 @@ workflow detectVariants {
     vcf=annotatedFilterIndex.indexed_vcf,
     vcf_tbi=annotatedFilterIndex.indexed_vcf_tbi,
     fields=variants_to_table_fields,
-    genotype_fields=variants_to_table_genotype_fields
+    genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call avftt.addVepFieldsToTable {
     input:
     vcf=annotatedFilterIndex.indexed_vcf,
     vep_fields=vep_to_table_fields,
-    tsv=variantsToTable.variants_tsv
+    tsv=variantsToTable.variants_tsv,
+    preemptible_tries=preemptible_tries
   }
 
   output {

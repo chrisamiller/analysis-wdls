@@ -9,11 +9,13 @@ task duphold {
     File reference_dict
     File? snps_vcf
     File sv_vcf
+    Int preemptible_tries = 3
   }
 
   Int cores = 2
   Int space_needed_gb = 10
   runtime {
+    preemptible: preemptible_tries
     memory: "10GB"
     docker: "mgibio/duphold-cwl:0.1.5"
     disks: "local-disk ~{space_needed_gb} SSD"

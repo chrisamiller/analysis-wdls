@@ -12,11 +12,13 @@ task docmGatkHaplotypeCaller {
     File docm_vcf
     File docm_vcf_tbi
     File interval_list
+    Int preemptible_tries = 3
   }
 
   Float copied_size = size([docm_vcf, interval_list], "GB")
   Int space_needed_gb = 10 + round(copied_size*3 + size([reference, reference_fai, reference_dict, normal_bam, normal_bam_bai, bam, bam_bai, docm_vcf_tbi], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "9GB"
     docker: "broadinstitute/gatk:4.1.2.0"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -53,6 +55,7 @@ workflow wf {
     File docm_vcf
     File docm_vcf_tbi
     File interval_list
+    Int preemptible_tries = 3
   }
   call docmGatkHaplotypeCaller {
     input:
@@ -65,6 +68,7 @@ workflow wf {
     bam_bai=bam_bai,
     docm_vcf=docm_vcf,
     docm_vcf_tbi=docm_vcf_tbi,
-    interval_list=interval_list
+    interval_list=interval_list,
+    preemptible_tries=preemptible_tries
   }
 }

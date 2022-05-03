@@ -14,11 +14,13 @@ task pindel {
     String normal_sample_name
     String? chromosome
     Int insert_size = 400
+    Int preemptible_tries = 3
   }
 
   Int cores = 4
   Int space_needed_gb = 10 + round(size([reference, reference_fai, reference_dict, normal_bam, normal_bam_bai, tumor_bam, tumor_bam_bai, region_file], "GB"))
   runtime {
+    preemptible: preemptible_tries
     bootDiskSizeGb: 100
     cpu: cores
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -61,6 +63,7 @@ workflow wf {
     String normal_sample_name
     String? chromosome
     Int insert_size = 400
+    Int preemptible_tries = 3
   }
 
   call pindel {
@@ -76,6 +79,7 @@ workflow wf {
     tumor_sample_name=tumor_sample_name,
     normal_sample_name=normal_sample_name,
     chromosome=chromosome,
-    insert_size=insert_size
+    insert_size=insert_size,
+    preemptible_tries=preemptible_tries
   }
 }

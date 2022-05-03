@@ -14,10 +14,12 @@ task varscanGermline {
     Float p_value = 0.99
     String sample_name
     File? roi_bed
+    Int preemptible_tries = 3
 }
 
   Int space_needed_gb = 10
   runtime {
+    preemptible: preemptible_tries
     memory: "12GB"
     cpu: 2
     docker: "mgibio/varscan_helper-cwl:1.0.0"

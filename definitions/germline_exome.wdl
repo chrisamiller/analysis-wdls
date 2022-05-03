@@ -48,6 +48,7 @@ workflow germlineExome {
     Array[String]? variants_to_table_fields
     Array[String]? variants_to_table_genotype_fields
     Array[String]? vep_to_table_fields
+    Int preemptible_tries = 3
   }
 
   call ae.alignmentExome as alignmentAndQc {
@@ -74,13 +75,15 @@ workflow germlineExome {
     omni_vcf_tbi=omni_vcf_tbi,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
-    qc_minimum_base_quality=qc_minimum_base_quality
+    qc_minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call ile.intervalListExpand as padTargetIntervals {
     input:
     interval_list=target_intervals,
-    roi_padding=target_interval_padding
+    roi_padding=target_interval_padding,
+    preemptible_tries=preemptible_tries
   }
 
   call gdv.germlineDetectVariants as detectVariants {
@@ -105,7 +108,8 @@ workflow germlineExome {
     vep_to_table_fields=vep_to_table_fields,
     vep_custom_annotations=vep_custom_annotations,
     variants_to_table_fields=variants_to_table_fields,
-    variants_to_table_genotype_fields=variants_to_table_genotype_fields
+    variants_to_table_genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -113,11 +117,14 @@ workflow germlineExome {
     bam=alignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
-    input: cram=bamToCram.cram
+    input: 
+    cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

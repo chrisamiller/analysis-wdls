@@ -16,10 +16,12 @@ task selectVariants {
 
     # ENUM: one of ["INDEL", "SNP", "MIXED", "MNP", "SYMBOLIC", "NO_VARIATION"]
     String? select_type
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([vcf, vcf_tbi], "GB")*3 + size([reference, reference_fai, reference_dict, interval_list], "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "broadinstitute/gatk:4.1.8.1"
     memory: "6GB"
     bootDiskSizeGb: 25

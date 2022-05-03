@@ -6,11 +6,13 @@ task stringtie {
     File reference_annotation
     String sample_name
     File bam
+    Int preemptible_tries = 3
   }
 
   Int cores = 12
   Int space_needed_gb = 10 + round(size([bam, reference_annotation], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "16GB"
     cpu: cores
     docker: "quay.io/biocontainers/stringtie:2.1.4--h7e0af3c_0"
@@ -40,6 +42,7 @@ workflow wf {
     File reference_annotation
     String sample_name
     File bam
+    Int preemptible_tries = 3
   }
 
   call stringtie {
@@ -47,6 +50,7 @@ workflow wf {
     strand=strand,
     reference_annotation=reference_annotation,
     sample_name=sample_name,
-    bam=bam
+    bam=bam,
+    preemptible_tries=preemptible_tries
   }
 }

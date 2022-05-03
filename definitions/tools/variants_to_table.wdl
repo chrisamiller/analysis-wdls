@@ -9,12 +9,14 @@ task variantsToTable {
     File vcf_tbi
     Array[String] fields = ["CHROM", "POS", "ID", "REF", "ALT", "set"]
     Array[String] genotype_fields = ["GT", "AD", "DP", "AF"]
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float vcf_size = size([vcf, vcf_tbi], "GB")
   Int space_needed_gb = 10 + round(vcf_size*2 + reference_size)
   runtime {
+    preemptible: preemptible_tries
     memory: "6GB"
     bootDiskSizeGb: 25
     docker: "broadinstitute/gatk:4.1.8.1"
@@ -43,6 +45,7 @@ workflow wf {
     File vcf_tbi
     Array[String]? fields
     Array[String]? genotype_fields
+    Int preemptible_tries = 3
   }
 
   call variantsToTable {
@@ -53,6 +56,7 @@ workflow wf {
     vcf=vcf,
     vcf_tbi=vcf_tbi,
     fields=fields,
-    genotype_fields=genotype_fields
+    genotype_fields=genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 }

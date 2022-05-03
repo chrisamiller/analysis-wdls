@@ -13,6 +13,7 @@ task sequenceAlignAndTag {
     File reference_bwt
     File reference_pac
     File reference_0123
+    Int preemptible_tries = 3
   }
 
   # Disk space
@@ -28,6 +29,7 @@ task sequenceAlignAndTag {
   Int instance_memory_gb = 76 
   Int jvm_memory_gb = 4
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/alignment_helper-cwl:2.2.1"
     memory: "~{instance_memory_gb}GB"
     cpu: cores
@@ -97,6 +99,7 @@ workflow wf {
     File reference_bwt
     File reference_pac
     File reference_0123
+    Int preemptible_tries = 3
   }
   call sequenceAlignAndTag {
     input:
@@ -108,6 +111,7 @@ workflow wf {
     reference_ann=reference_ann,
     reference_bwt=reference_bwt,
     reference_pac=reference_pac,
-    reference_0123=reference_0123
+    reference_0123=reference_0123,
+    preemptible_tries=preemptible_tries
   }
 }

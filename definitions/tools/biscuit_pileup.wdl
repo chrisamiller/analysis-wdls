@@ -5,11 +5,13 @@ task biscuitPileup {
     File bam
     File reference
     File reference_fai
+    Int preemptible_tries = 3
   }
   Int cores = 4
 
   Int space_needed_gb = 10 + round(2*size([bam, reference], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "48GB"
     cpu: cores
     docker: "mgibio/biscuit:0.3.8"

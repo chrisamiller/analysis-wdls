@@ -3,10 +3,12 @@ version 1.0
 task filterVcfCodingVariant {
   input {
     File vcf
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size(vcf, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "mgibio/vep_helper-cwl:vep_105.0_v1"
     disks: "local-disk ~{space_needed_gb} SSD"

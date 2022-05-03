@@ -22,6 +22,7 @@ workflow vcfReadcount {
     Int? minimum_mapping_quality
 
     File vcf
+    Int preemptible_tries = 3
   }
 
   call br.bamReadcount as tumorBamReadcount {
@@ -34,7 +35,8 @@ workflow vcfReadcount {
     bam=tumor_bam,
     bam_bai=tumor_bam_bai,
     min_base_quality=minimum_base_quality,
-    min_mapping_quality=minimum_mapping_quality
+    min_mapping_quality=minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call br.bamReadcount as normalBamReadcount {
@@ -47,7 +49,8 @@ workflow vcfReadcount {
     bam=normal_bam,
     bam_bai=normal_bam_bai,
     min_base_quality=minimum_base_quality,
-    min_mapping_quality=minimum_mapping_quality
+    min_mapping_quality=minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call vra.vcfReadcountAnnotator as addTumorBamReadcountToVcf {
@@ -56,7 +59,8 @@ workflow vcfReadcount {
     snv_bam_readcount_tsv=tumorBamReadcount.snv_bam_readcount_tsv,
     indel_bam_readcount_tsv=tumorBamReadcount.indel_bam_readcount_tsv,
     data_type="DNA",
-    sample_name=tumor_sample_name
+    sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call vra.vcfReadcountAnnotator as addNormalBamReadcountToVcf {
@@ -65,11 +69,14 @@ workflow vcfReadcount {
     snv_bam_readcount_tsv=normalBamReadcount.snv_bam_readcount_tsv,
     indel_bam_readcount_tsv=normalBamReadcount.indel_bam_readcount_tsv,
     data_type="DNA",
-    sample_name=normal_sample_name
+    sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
-    input: vcf=addNormalBamReadcountToVcf.annotated_bam_readcount_vcf
+    input: 
+      vcf=addNormalBamReadcountToVcf.annotated_bam_readcount_vcf,
+      preemptible_tries=preemptible_tries
   }
 
   output {

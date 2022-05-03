@@ -6,10 +6,12 @@ task generateQcMetrics {
     File refFlat
     File? ribosomal_intervals
     String strand = "unstranded"  # [first, second, unstranded]
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([bam, refFlat, ribosomal_intervals], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "18GB"
     docker: "mgibio/rnaseq:1.0.0"
     cpu: 1

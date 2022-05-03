@@ -12,10 +12,12 @@ task fpFilter {
     String output_vcf_basename = "fpfilter"
     String sample_name = "TUMOR"
     Float min_var_freq = 0.05
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(vcf, "GB")*2 + size([reference, reference_fai, reference_dict, bam], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "6GB"
     bootDiskSizeGb: 25
     docker: "mgibio/fp_filter-cwl:1.0.1"
@@ -43,6 +45,7 @@ workflow wf {
 
     String sample_name = "TUMOR"
     String output_vcf_basename = "fpfilter"
+    Int preemptible_tries = 3
   }
 
   call fpFilter {
@@ -53,6 +56,7 @@ workflow wf {
     bam=bam,
     vcf=vcf,
     output_vcf_basename=output_vcf_basename,
-    sample_name=sample_name
+    sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 }

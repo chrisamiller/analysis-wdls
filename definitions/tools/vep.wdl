@@ -23,6 +23,7 @@ task vepTask {
     # one of [pick, flag_pick, pick-allele, per_gene, pick_allele_gene, flag_pick_allele, flag_pick_allele_gene]
     String pick = "flag_pick"
     File? synonyms_file
+    Int preemptible_tries = 3
   }
 
   Float cache_size = 2*size(cache_dir_zip, "GB")  # doubled to unzip
@@ -30,6 +31,7 @@ task vepTask {
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Int space_needed_gb = 10 + round(reference_size + vcf_size + cache_size + size(synonyms_file, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "64GB"
     bootDiskSizeGb: 30
     cpu: 4
@@ -116,6 +118,7 @@ workflow vep {
     Boolean everything = true
     # one of [pick, flag_pick, pick-allele, per_gene, pick_allele_gene, flag_pick_allele, flag_pick_allele_gene]
     String pick = "flag_pick"
+    Int preemptible_tries = 3
   }
 
   scatter(vca in custom_annotations) {
@@ -141,7 +144,8 @@ workflow vep {
     custom_args=parseVepCustomAnnotationIntoArg.custom_arg,
     coding_only=coding_only,
     everything=everything,
-    pick=pick
+    pick=pick,
+    preemptible_tries=preemptible_tries
   }
 
   output {

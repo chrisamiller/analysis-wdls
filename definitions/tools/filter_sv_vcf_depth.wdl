@@ -7,10 +7,12 @@ task filterSvVcfDepth {
     Float deletion_depth = 0.75
     Float duplication_depth = 1.25
     String vcf_source  # enum ["cnvnator" "cnvkit" "duphold"]
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size(input_vcf, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "mgibiobcftools-cwl:1.12"
     disks: "local-disk ~{space_needed_gb} SSD"

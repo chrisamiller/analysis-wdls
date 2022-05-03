@@ -27,6 +27,7 @@ workflow alignmentWgsNonhuman {
     String picard_metric_accumulation_level
     Int? minimum_mapping_quality
     Int? minimum_base_quality
+    Int preemptible_tries = 3
   }
 
   call stbn.sequenceToBamNonhuman as alignment {
@@ -40,7 +41,8 @@ workflow alignmentWgsNonhuman {
     reference_0123=reference_0123,
     unaligned=sequence,
     trimming=trimming,
-    final_name=final_name
+    final_name=final_name,
+    preemptible_tries=preemptible_tries
   }
 
   call qwn.qcWgsNonhuman as qc {
@@ -55,7 +57,8 @@ workflow alignmentWgsNonhuman {
     minimum_base_quality=minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   output {

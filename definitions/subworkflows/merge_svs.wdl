@@ -18,6 +18,7 @@ workflow mergeSvs {
     File? snps_vcf
     Array[File] sv_vcfs
     File? blocklist_bedpe
+    Int preemptible_tries = 3
   }
 
   call s.survivor as survivorMergeSvVcfs {
@@ -29,14 +30,16 @@ workflow mergeSvs {
     same_strand=same_strand,
     estimate_sv_distance=estimate_sv_distance,
     minimum_sv_size=minimum_sv_size,
-    cohort_name="SURVIVOR-sv-merged.vcf"
+    cohort_name="SURVIVOR-sv-merged.vcf",
+    preemptible_tries=preemptible_tries
   }
 
   call fsvbb.filterSvVcfBlocklistBedpe as filterBlocklistSurvivor {
     input:
     input_vcf=survivorMergeSvVcfs.merged_vcf,
     blocklist_bedpe=blocklist_bedpe,
-    output_vcf_basename="SURVIVOR-sv-merged"
+    output_vcf_basename="SURVIVOR-sv-merged",
+    preemptible_tries=preemptible_tries
   }
 
   call a.annotsv as survivorAnnotateVariants {
@@ -44,7 +47,8 @@ workflow mergeSvs {
     genome_build=genome_build,
     input_vcf=filterBlocklistSurvivor.filtered_sv_vcf,
     output_tsv_name="SURVIVOR-merged-AnnotSV.tsv",
-    snps_vcf=select_all([snps_vcf])
+    snps_vcf=select_all([snps_vcf]),
+    preemptible_tries=preemptible_tries
   }
 
   call bm.bcftoolsMerge as bcftoolsMergeSvVcfs {
@@ -52,14 +56,16 @@ workflow mergeSvs {
     merge_method="none",
     output_type="v",
     output_vcf_name="bcftools-sv-merged.vcf",
-    vcfs=sv_vcfs
+    vcfs=sv_vcfs,
+    preemptible_tries=preemptible_tries
   }
 
   call fsvbb.filterSvVcfBlocklistBedpe as filterBlocklistBcftools {
     input:
     input_vcf=bcftoolsMergeSvVcfs.merged_sv_vcf,
     blocklist_bedpe=blocklist_bedpe,
-    output_vcf_basename="bcftools-sv-merged"
+    output_vcf_basename="bcftools-sv-merged",
+    preemptible_tries=preemptible_tries
   }
 
   call a.annotsv as bcftoolsAnnotateVariants {
@@ -67,13 +73,15 @@ workflow mergeSvs {
     genome_build=genome_build,
     input_vcf=filterBlocklistBcftools.filtered_sv_vcf,
     output_tsv_name="bcftools-merged-AnnotSV.tsv",
-    snps_vcf=select_all([snps_vcf])
+    snps_vcf=select_all([snps_vcf]),
+    preemptible_tries=preemptible_tries
   }
 
   call af.annotsvFilter as bcftoolsAnnotsvFilter {
     input:
     annotsv_tsv=bcftoolsAnnotateVariants.sv_variants_tsv,
-    filtering_frequency="0.05"
+    filtering_frequency="0.05",
+    preemptible_tries=preemptible_tries
   }
 
   output {

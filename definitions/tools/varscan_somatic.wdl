@@ -17,12 +17,14 @@ task varscanSomatic {
     Float min_var_freq = 0.1
     Float p_value = 0.99
     File? roi_bed
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float bam_size = size([tumor_bam, tumor_bam_bai, normal_bam, normal_bam_bai], "GB")
   Int space_needed_gb = 10 + ceil(reference_size + bam_size*2)
   runtime {
+    preemptible: preemptible_tries
     memory: "12GB"
     cpu: 2
     docker: "mgibio/cle:v1.3.1"
@@ -67,6 +69,7 @@ workflow wf {
     Float min_var_freq = 0.1
     Float p_value = 0.99
     File? roi_bed
+    Int preemptible_tries = 3
   }
 
   call varscanSomatic {
@@ -82,6 +85,7 @@ workflow wf {
     min_coverage=min_coverage,
     min_var_freq=min_var_freq,
     p_value=p_value,
-    roi_bed=roi_bed
+    roi_bed=roi_bed,
+    preemptible_tries=preemptible_tries
   }
 }

@@ -8,10 +8,12 @@ task filterSvVcfReadSupport {
     Int? paired_count
     Int? split_count
     String vcf_source  # enum ["manta" "smoove"]
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "bcftools-cwl:1.12"
     disks: "local-disk ~{space_needed_gb} SSD"

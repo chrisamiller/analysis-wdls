@@ -13,12 +13,14 @@ task mutect {
     File normal_bam_bai
 
     File interval_list
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float bam_size = size([tumor_bam, tumor_bam_bai, normal_bam, normal_bam_bai], "GB")
   Int space_needed_gb = 10 + ceil(reference_size + 2*bam_size + size(interval_list, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "broadinstitute/gatk:4.2.3.0"
     memory: "32GB"
     bootDiskSizeGb: space_needed_gb
@@ -56,6 +58,7 @@ workflow wf {
     File normal_bam
     File normal_bam_bai
     File interval_list
+    Int preemptible_tries = 3
   }
 
   call mutect {
@@ -67,6 +70,7 @@ workflow wf {
     tumor_bam_bai=tumor_bam_bai,
     normal_bam=normal_bam,
     normal_bam_bai=normal_bam_bai,
-    interval_list=interval_list
+    interval_list=interval_list,
+    preemptible_tries=preemptible_tries
   }
 }

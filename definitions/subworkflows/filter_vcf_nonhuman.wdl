@@ -22,6 +22,7 @@ workflow filterVcfNonhuman {
     Int filter_minimum_depth
     String tumor_sample_name
     String normal_sample_name
+    Int preemptible_tries = 3
   }
 
   call fvm.filterVcfMapq0 {
@@ -32,20 +33,23 @@ workflow filterVcfNonhuman {
     reference=reference,
     reference_fai=reference_fai,
     reference_dict=reference_dict,
-    threshold=filter_mapq0_threshold
+    threshold=filter_mapq0_threshold,
+    preemptible_tries=preemptible_tries
   }
 
   call fvc.filterVcfCle {
     input:
     vcf=filterVcfMapq0.mapq0_filtered_vcf,
-    filter=do_cle_vcf_filter
+    filter=do_cle_vcf_filter,
+    preemptible_tries=preemptible_tries
   }
 
   call fvd.filterVcfDepth {
     input:
     vcf=filterVcfCle.cle_filtered_vcf,
     minimum_depth=filter_minimum_depth,
-    sample_names=[normal_sample_name, tumor_sample_name]
+    sample_names=[normal_sample_name, tumor_sample_name],
+    preemptible_tries=preemptible_tries
   }
 
   call fvsl.filterVcfSomaticLlr {
@@ -55,13 +59,15 @@ workflow filterVcfNonhuman {
     tumor_purity=filter_somatic_llr_tumor_purity,
     normal_contamination_rate=filter_somatic_llr_normal_contamination_rate,
     tumor_sample_name=tumor_sample_name,
-    normal_sample_name=normal_sample_name
+    normal_sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call sr.stagedRename as setFinalVcfName {
     input:
     original=filterVcfSomaticLlr.somatic_llr_filtered_vcf,
-    name="annotated_filtered.vcf"
+    name="annotated_filtered.vcf",
+    preemptible_tries=preemptible_tries
   }
 
   output {

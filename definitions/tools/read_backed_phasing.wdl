@@ -9,10 +9,12 @@ task readBackedPhasing {
     File reference_dict
     File vcf
     File vcf_tbi
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([bam, bam_index, reference, reference_fai, reference_dict, vcf, vcf_tbi], "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/gatk-cwl:3.6.0"
     memory: "9GB"
     bootDiskSizeGb: 25
@@ -44,6 +46,7 @@ workflow wf {
     File reference_dict
     File vcf
     File vcf_tbi
+    Int preemptible_tries = 3
   }
   call readBackedPhasing {
     input:
@@ -53,6 +56,7 @@ workflow wf {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     vcf=vcf,
-    vcf_tbi=vcf_tbi
+    vcf_tbi=vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 }

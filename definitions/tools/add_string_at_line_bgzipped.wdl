@@ -6,10 +6,12 @@ task addStringAtLineBgzipped {
     Int line_number
     String some_text
     String output_name = basename(input_file, ".gz") + ".commented.gz"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size(input_file, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "quay.io/biocontainers/samtools:1.11-h6270b1f_0"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"

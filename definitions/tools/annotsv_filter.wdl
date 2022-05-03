@@ -7,10 +7,12 @@ task annotsvFilter {
     Float filtering_frequency = 0.05
     Boolean ignore_pass_filter = false
     String output_tsv_name = "filtered-bcftools-merged-AnnotSV.tsv"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size(annotsv_tsv, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "python:3"
     disks: "local-disk ~{space_needed_gb} SSD"

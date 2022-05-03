@@ -3,10 +3,12 @@ version 1.0
 task addStrelkaGt {
   input {
     File vcf
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(vcf, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     docker: "ubuntu:bionic"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -115,9 +117,12 @@ task addStrelkaGt {
 workflow wf {
   input {
     File vcf
+    Int preemptible_tries = 3
   }
 
   call addStrelkaGt {
-    input: vcf=vcf
+    input: 
+      vcf=vcf,
+      preemptible_tries=preemptible_tries
   }
 }

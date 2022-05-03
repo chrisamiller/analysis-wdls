@@ -5,10 +5,12 @@ task picardMergeVcfs {
     String merged_vcf_basename = "merged"
     File? sequence_dictionary
     Array[File] vcfs
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(sequence_dictionary, "GB") + size(vcfs, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     memory: "40GB"
     docker: "broadinstitute/gatk:4.1.8.1"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -32,12 +34,14 @@ workflow wf {
     String merged_vcf_basename = "merged"
     File? sequence_dictionary
     Array[File] vcfs
+    Int preemptible_tries = 3
   }
 
   call picardMergeVcfs {
     input:
     merged_vcf_basename=merged_vcf_basename,
     sequence_dictionary=sequence_dictionary,
-    vcfs=vcfs
+    vcfs=vcfs,
+    preemptible_tries=preemptible_tries
   }
 }

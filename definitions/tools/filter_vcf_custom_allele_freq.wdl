@@ -5,10 +5,12 @@ task filterVcfCustomAlleleFreq {
     File vcf
     Float maximum_population_allele_frequency
     String field_name
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(vcf, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/vep_helper-cwl:vep_105.0_v1"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -31,12 +33,14 @@ workflow wf {
     File vcf
     Float maximum_population_allele_frequency
     String field_name
+    Int preemptible_tries = 3
   }
 
   call filterVcfCustomAlleleFreq {
     input:
     vcf=vcf,
     maximum_population_allele_frequency=maximum_population_allele_frequency,
-    field_name=field_name
+    field_name=field_name,
+    preemptible_tries=preemptible_tries
   }
 }

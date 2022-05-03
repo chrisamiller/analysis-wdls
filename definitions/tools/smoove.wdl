@@ -8,12 +8,14 @@ task smoove {
     File reference_fai
     File reference_dict
     File? exclude_regions
+    Int preemptible_tries = 3
   }
 
   Int cores = 4
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Int space_needed_gb = 10 + round(2*(size(bams, "GB") + reference_size))
   runtime {
+    preemptible: preemptible_tries
     memory: "20GB"
     cpu: cores
     bootDiskSizeGb: 10

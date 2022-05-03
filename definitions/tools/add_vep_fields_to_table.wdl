@@ -6,10 +6,12 @@ task addVepFieldsToTable {
     Array[String] vep_fields = ["Consequence", "SYMBOL", "Feature", "HGVSc", "HGVSp"]
     File? tsv
     String prefix = "variants"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([vcf, tsv], "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "griffithlab/vatools:4.1.0"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -32,6 +34,7 @@ workflow wf {
     Array[String]? vep_fields
     File? tsv
     String? prefix
+    Int preemptible_tries = 3
   }
 
   call addVepFieldsToTable {
@@ -39,6 +42,7 @@ workflow wf {
     vcf=vcf,
     vep_fields=vep_fields,
     tsv=tsv,
-    prefix=prefix
+    prefix=prefix,
+    preemptible_tries=preemptible_tries
   }
 }

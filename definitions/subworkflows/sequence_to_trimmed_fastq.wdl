@@ -13,6 +13,7 @@ workflow sequenceToTrimmedFastq {
     Int max_uncalled
     Int min_readlength
     Boolean? unzip_fastqs
+    Int preemptible_tries = 3
   }
 
   call stf.sequenceToFastq as sequenceToFastq {
@@ -20,7 +21,8 @@ workflow sequenceToTrimmedFastq {
     bam=unaligned.sequence.bam,
     fastq1=unaligned.sequence.fastq1,
     fastq2=unaligned.sequence.fastq2,
-    unzip_fastqs=unzip_fastqs
+    unzip_fastqs=unzip_fastqs,
+    preemptible_tries=preemptible_tries
   }
 
   call tf.trimFastq {
@@ -32,6 +34,7 @@ workflow sequenceToTrimmedFastq {
     adapter_min_overlap=adapter_min_overlap,
     max_uncalled=max_uncalled,
     min_readlength=min_readlength,
+    preemptible_tries=preemptible_tries
   }
 
   output {

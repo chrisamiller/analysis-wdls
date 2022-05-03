@@ -9,6 +9,7 @@ workflow vcfReadcountAnnotator {
     File indel_bam_readcount_tsv
     String data_type  # one of [DNA, RNA]
     String sample_name
+    Int preemptible_tries = 3
   }
 
   call vra.vcfReadcountAnnotator as addSnvBamReadcountToVcf {
@@ -17,7 +18,8 @@ workflow vcfReadcountAnnotator {
     bam_readcount_tsv=snv_bam_readcount_tsv,
     data_type=data_type,
     sample_name=sample_name,
-    variant_type="snv"
+    variant_type="snv",
+    preemptible_tries=preemptible_tries  
   }
 
   call vra.vcfReadcountAnnotator as addIndelBamReadcountToVcf {
@@ -26,7 +28,8 @@ workflow vcfReadcountAnnotator {
     bam_readcount_tsv=indel_bam_readcount_tsv,
     data_type=data_type,
     sample_name=sample_name,
-    variant_type="indel"
+    variant_type="indel",
+    preemptible_tries=preemptible_tries
   }
 
   output {

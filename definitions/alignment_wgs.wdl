@@ -33,6 +33,7 @@ workflow alignmentWgs {
     Array[LabelledFile] per_target_intervals
     Array[LabelledFile] summary_intervals
     String? sample_name
+    Int preemptible_tries = 3
   }
 
   call stb.sequenceToBqsr as alignment {
@@ -50,7 +51,8 @@ workflow alignmentWgs {
     trimming=trimming,
     bqsr_known_sites=bqsr_known_sites,
     bqsr_known_sites_tbi=bqsr_known_sites_tbi,
-    final_name=sample_name
+    final_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call qw.qcWgs as qc {
@@ -69,7 +71,8 @@ workflow alignmentWgs {
     minimum_base_quality=minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   output {

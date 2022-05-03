@@ -23,10 +23,12 @@ task pvacfuse {
     Int? downstream_sequence_length
     Boolean exclude_nas = false
     Int n_threads = 8
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([input_fusions_zip], "GB") * 3)
   runtime {
+    preemptible: preemptible_tries
     docker: "griffithlab/pvactools:3.0.0"
     memory: "16GB"
     cpu: n_threads

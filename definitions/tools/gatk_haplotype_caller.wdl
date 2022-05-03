@@ -17,6 +17,7 @@ task gatkHaplotypeCaller {
     Int? ploidy
     String? read_filter
     String output_file_name
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
@@ -24,6 +25,7 @@ task gatkHaplotypeCaller {
   Float vcf_size = size([dbsnp_vcf, dbsnp_vcf_tbi], "GB")
   Int space_needed_gb = 10 + round(reference_size + 2*bam_size + vcf_size)
   runtime {
+    preemptible: preemptible_tries
     memory: "18GB"
     docker: "broadinstitute/gatk:4.1.8.1"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -78,6 +80,7 @@ workflow wf {
     Int? ploidy
     String? read_filter
     String output_file_name
+    Int preemptible_tries = 3
   }
   call gatkHaplotypeCaller {
     input:
@@ -96,5 +99,6 @@ workflow wf {
     ploidy=ploidy,
     read_filter=read_filter,
     output_file_name=output_file_name,
+    preemptible_tries=preemptible_tries
   }
 }

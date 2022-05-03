@@ -16,6 +16,7 @@ workflow bamReadcount {
     File bam_bai
     Int? min_base_quality
     Int? min_mapping_quality
+    Int preemptible_tries = 3
   }
 
   call nv.normalizeVariants {
@@ -24,13 +25,15 @@ workflow bamReadcount {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     vcf=vcf,
-    vcf_tbi=vcf_tbi
+    vcf_tbi=vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call vd.vtDecompose as decomposeVariants {
     input:
     vcf=normalizeVariants.normalized_vcf,
-    vcf_tbi=normalizeVariants.normalized_vcf_tbi
+    vcf_tbi=normalizeVariants.normalized_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call br.bamReadcount as readcount {
@@ -43,7 +46,8 @@ workflow bamReadcount {
     bam_bai=bam_bai,
     sample=sample,
     min_mapping_quality=min_mapping_quality,
-    min_base_quality=min_base_quality
+    min_base_quality=min_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   output {

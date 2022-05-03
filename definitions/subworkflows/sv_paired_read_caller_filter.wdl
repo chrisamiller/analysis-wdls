@@ -21,6 +21,7 @@ workflow svPairedReadCallerFilter {
     Int? sv_split_count
     File sv_vcf
     String vcf_source  # enum ["manta", "smoove"]
+    Int preemptible_tries = 3
   }
 
   call fsvrs.filterSvVcfReadSupport as readSupportFilter {
@@ -29,7 +30,8 @@ workflow svPairedReadCallerFilter {
     input_vcf=sv_vcf,
     paired_count=sv_paired_count,
     split_count=sv_split_count,
-    vcf_source=vcf_source
+    vcf_source=vcf_source,
+    preemptible_tries=preemptible_tries
   }
 
   call d.duphold as dupholdAnnotate {
@@ -39,7 +41,8 @@ workflow svPairedReadCallerFilter {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     snps_vcf=snps_vcf,
-    sv_vcf=readSupportFilter.filtered_sv_vcf
+    sv_vcf=readSupportFilter.filtered_sv_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call fsvd.filterSvVcfDepth as depthFilter {
@@ -48,15 +51,20 @@ workflow svPairedReadCallerFilter {
     deletion_depth=deletion_depth,
     duplication_depth=duplication_depth,
     output_vcf_name=output_vcf_name,
-    vcf_source="duphold"
+    vcf_source="duphold",
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as filteredVcfBgzip {
-    input: file=depthFilter.filtered_sv_vcf
+    input: 
+    file=depthFilter.filtered_sv_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as filteredVcfIndex {
-    input: vcf=filteredVcfBgzip.bgzipped_file
+    input: 
+    vcf=filteredVcfBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   output {

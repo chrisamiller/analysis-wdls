@@ -10,10 +10,12 @@ task survivor {
     Boolean estimate_sv_distance
     Int minimum_sv_size
     String cohort_name = "SURVIVOR-sv-merged.vcf"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/survivor-cwl:1.0.6.2"
     memory: "2GB"
     cpu: 1

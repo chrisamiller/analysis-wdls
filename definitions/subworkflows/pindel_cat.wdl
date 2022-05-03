@@ -16,6 +16,7 @@ workflow pindelCat {
     Int insert_size = 400
     String tumor_sample_name
     String normal_sample_name
+    Int preemptible_tries = 3
   }
 
   call p.pindel {
@@ -30,11 +31,12 @@ workflow pindelCat {
     region_file=region_file,
     insert_size=insert_size,
     tumor_sample_name=tumor_sample_name,
-    normal_sample_name=normal_sample_name
+    normal_sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call co.catOut as cat {
-    input: pindel_outs=[pindel.deletions, pindel.insertions, pindel.tandems, pindel.long_insertions, pindel.inversions]
+    input: pindel_outs=[pindel.deletions, pindel.insertions, pindel.tandems, pindel.long_insertions, pindel.inversions],preemptible_tries=preemptible_tries
   }
 
   output {

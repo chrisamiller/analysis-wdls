@@ -30,6 +30,7 @@ workflow alignmentExome {
     String picard_metric_accumulation_level
     Int? qc_minimum_mapping_quality
     Int? qc_minimum_base_quality
+    Int preemptible_tries = 3
   }
 
   call s2b.sequenceToBqsr as alignment {
@@ -47,7 +48,8 @@ workflow alignmentExome {
     trimming=trimming,
     bqsr_known_sites=bqsr_known_sites,
     bqsr_known_sites_tbi=bqsr_known_sites_tbi,
-    final_name=final_name
+    final_name=final_name,
+    preemptible_tries=preemptible_tries
   }
 
   call qe.qcExome as qc {
@@ -66,7 +68,8 @@ workflow alignmentExome {
     omni_vcf_tbi=omni_vcf_tbi,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     minimum_mapping_quality=qc_minimum_mapping_quality,
-    minimum_base_quality=qc_minimum_base_quality
+    minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   output {

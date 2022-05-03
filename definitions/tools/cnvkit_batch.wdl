@@ -16,11 +16,13 @@ task cnvkitBatch {
     Boolean drop_low_coverage = false
     Boolean male_reference = false
     Int? target_average_size
+    Int preemptible_tries = 3
   }
 
 
   Int size_needed_gb = 10 + round(size([tumor_bam, bait_intervals, access, normal_bam, reference_fasta, reference_cnn], "GB") * 2)
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     cpu: 1
     # We use a forked cnvkit so we can get access to root privileges
@@ -87,6 +89,7 @@ workflow wf {
     Boolean drop_low_coverage = false
     Boolean male_reference = false
     Int? target_average_size
+    Int preemptible_tries = 3
   }
 
   call cnvkitBatch {
@@ -104,6 +107,7 @@ workflow wf {
     scatter_plot=scatter_plot,
     drop_low_coverage=drop_low_coverage,
     male_reference=male_reference,
-    target_average_size=target_average_size
+    target_average_size=target_average_size,
+    preemptible_tries=preemptible_tries
   }
 }

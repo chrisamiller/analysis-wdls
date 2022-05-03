@@ -13,13 +13,15 @@ workflow svDepthCallerFilter {
     String? output_vcf_name
     File sv_vcf
     String vcf_source  # enum ["cnvkit" "cnvnator"]
+    Int preemptible_tries = 3
   }
 
   call fsvs.filterSvVcfSize as sizeFilter {
     input:
     input_vcf=sv_vcf,
     size_method="min_len",
-    sv_size=min_sv_size
+    sv_size=min_sv_size,
+    preemptible_tries=preemptible_tries
   }
 
   call fsvd.filterSvVcfDepth as depthFilter {
@@ -28,15 +30,20 @@ workflow svDepthCallerFilter {
     deletion_depth=deletion_depth,
     duplication_depth=duplication_depth,
     output_vcf_name=output_vcf_name,
-    vcf_source=vcf_source
+    vcf_source=vcf_source,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as filteredVcfBgzip {
-    input: file=depthFilter.filtered_sv_vcf
+    input: 
+    file=depthFilter.filtered_sv_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as filteredVcfIndex {
-    input: vcf=filteredVcfBgzip.bgzipped_file
+    input: 
+    vcf=filteredVcfBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   output {

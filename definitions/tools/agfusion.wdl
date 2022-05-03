@@ -6,9 +6,11 @@ task agfusion {
     File agfusion_database
     Boolean annotate_noncanonical = false
     String output_dir = "agfusion_results"
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/agfusion:1.25-patch"
     memory: "32GB"
     cpu: 4

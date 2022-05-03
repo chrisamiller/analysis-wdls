@@ -6,10 +6,12 @@ task annotsv {
     File input_vcf
     String output_tsv_name = "AnnotSV.tsv"
     Array[File] snps_vcf
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(snps_vcf, "GB") + size(input_vcf, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "8GB"
     docker: "mgibio/annotsv-cwl:2.1"
     disks: "local-disk ~{space_needed_gb} SSD"

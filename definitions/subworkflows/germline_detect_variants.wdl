@@ -38,11 +38,13 @@ workflow germlineDetectVariants {
     String final_tsv_prefix = "variants"
     String gnomad_field_name = "gnomADe_AF"  # only change with gnomad_filter annotation
     Float filter_gnomAD_maximum_population_allele_frequency = 0.05
+    Int preemptible_tries = 3
   }
 
   call f.freemix {
     input:
-    verify_bam_id_metrics=verify_bam_id_metrics
+    verify_bam_id_metrics=verify_bam_id_metrics,
+    preemptible_tries=preemptible_tries
   }
 
   call ghi.gatkHaplotypecallerIterator as haplotypeCaller {
@@ -56,11 +58,14 @@ workflow germlineDetectVariants {
     gvcf_gq_bands=gvcf_gq_bands,
     intervals=intervals,
     contamination_fraction=freemix.out,
-    ploidy=ploidy
+    ploidy=ploidy,
+    preemptible_tries=preemptible_tries
   }
 
   call pmv.picardMergeVcfs as mergeVcfs {
-    input: vcfs=haplotypeCaller.gvcf
+    input: 
+    vcfs=haplotypeCaller.gvcf,
+    preemptible_tries=preemptible_tries
   }
 
   call v.vep as annotateVariants {
@@ -76,7 +81,8 @@ workflow germlineDetectVariants {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     custom_annotations=vep_custom_annotations,
-    plugins=vep_plugins
+    plugins=vep_plugins,
+    preemptible_tries=preemptible_tries
   }
 
 
@@ -88,7 +94,8 @@ workflow germlineDetectVariants {
     reference_dict=reference_dict,
     gnomad_field_name=gnomad_field_name,
     filter_gnomAD_maximum_population_allele_frequency=filter_gnomAD_maximum_population_allele_frequency,
-    limit_variant_intervals=limit_variant_intervals
+    limit_variant_intervals=limit_variant_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call vtt.variantsToTable as  filteredVariantsToTable {
@@ -99,7 +106,8 @@ workflow germlineDetectVariants {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     fields=variants_to_table_fields,
-    genotype_fields=variants_to_table_genotype_fields
+    genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call avftt.addVepFieldsToTable as filteredAddVepFieldsToTable {
@@ -107,13 +115,15 @@ workflow germlineDetectVariants {
     vcf=filterVcf.filtered_vcf,
     tsv=filteredVariantsToTable.variants_tsv,
     vep_fields=vep_to_table_fields,
-    prefix=final_tsv_prefix
+    prefix=final_tsv_prefix,
+    preemptible_tries=preemptible_tries
   }
 
   call sr.stagedRename as setFilteredTsvName {
     input:
     original=filteredAddVepFieldsToTable.annotated_variants_tsv,
-    name="annotated.filtered.tsv"
+    name="annotated.filtered.tsv",
+    preemptible_tries=preemptible_tries
   }
 
   call vtt.variantsToTable as finalVariantsToTable {
@@ -124,7 +134,8 @@ workflow germlineDetectVariants {
     vcf=filterVcf.final_vcf,
     vcf_tbi=filterVcf.final_vcf_tbi,
     fields=variants_to_table_fields,
-    genotype_fields=variants_to_table_genotype_fields
+    genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
 }
 
   call avftt.addVepFieldsToTable as finalAddVepFieldsToTable {
@@ -132,13 +143,15 @@ workflow germlineDetectVariants {
     vcf=filterVcf.final_vcf,
     vep_fields=vep_to_table_fields,
     tsv=finalVariantsToTable.variants_tsv,
-    prefix=final_tsv_prefix
+    prefix=final_tsv_prefix,
+    preemptible_tries=preemptible_tries
   }
 
   call sr.stagedRename as setFinalTsvName {
     input:
     original=finalAddVepFieldsToTable.annotated_variants_tsv,
-    name="annotated.filtered.final.tsv"
+    name="annotated.filtered.final.tsv",
+    preemptible_tries=preemptible_tries
   }
 
   output {

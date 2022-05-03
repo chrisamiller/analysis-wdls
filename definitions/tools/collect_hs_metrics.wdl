@@ -17,10 +17,12 @@ task collectHsMetrics {
     Int? minimum_mapping_quality
 
     String output_prefix = "out"
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size([bam, bam_bai, reference, reference_fai, reference_dict, bait_intervals, target_intervals], "GB"))
   runtime{
+    preemptible: preemptible_tries
     memory: "60GB"
     docker: "broadinstitute/picard:2.23.6"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -68,6 +70,7 @@ workflow wf {
     Int? minimum_mapping_quality
 
     String output_prefix = "out"
+    Int preemptible_tries = 3
   }
 
   call collectHsMetrics {
@@ -84,6 +87,7 @@ workflow wf {
     per_base_coverage=per_base_coverage,
     minimum_base_quality=minimum_base_quality,
     minimum_mapping_quality=minimum_mapping_quality,
-    output_prefix=output_prefix
+    output_prefix=output_prefix,
+    preemptible_tries=preemptible_tries
   }
 }

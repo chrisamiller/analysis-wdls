@@ -16,6 +16,7 @@ task hisat2Align {
     String read_group_id
     Array[String] read_group_fields
     String strand = "unstranded"  # [first, second, unstranded]
+    Int preemptible_tries = 3
   }
 
   Int cores = 16
@@ -33,6 +34,7 @@ task hisat2Align {
   ], "GB")
   Int space_needed_gb = 10 + round(5*fastq_size_gb + reference_size_gb)
   runtime {
+    preemptible: preemptible_tries
     memory: "32GB"
     cpu: cores
     bootDiskSizeGb: space_needed_gb
@@ -81,6 +83,7 @@ workflow wf {
     String read_group_id
     Array[String] read_group_fields
     String? strand
+    Int preemptible_tries = 3
   }
   call hisat2Align {
     input:
@@ -97,6 +100,7 @@ workflow wf {
     fastq2=fastq2,
     read_group_id=read_group_id,
     read_group_fields=read_group_fields,
-    strand=strand
+    strand=strand,
+    preemptible_tries=preemptible_tries
   }
 }

@@ -26,6 +26,7 @@ workflow alignmentExomeNonhuman {
     Array[LabelledFile] per_base_intervals
     Array[LabelledFile] per_target_intervals
     Array[LabelledFile] summary_intervals
+    Int preemptible_tries = 3
   }
 
 
@@ -40,7 +41,8 @@ workflow alignmentExomeNonhuman {
     reference_0123=reference_0123,
     unaligned=sequence,
     trimming=trimming,
-    final_name=final_name
+    final_name=final_name,
+    preemptible_tries=preemptible_tries
   }
 
   call qenvb.qcExomeNoVerifyBam as qc {
@@ -57,7 +59,8 @@ workflow alignmentExomeNonhuman {
     summary_intervals=summary_intervals,
     picard_metric_accumulation_level=picard_metric_accumulation_level,
     minimum_mapping_quality=qc_minimum_mapping_quality,
-    minimum_base_quality=qc_minimum_base_quality
+    minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   output {

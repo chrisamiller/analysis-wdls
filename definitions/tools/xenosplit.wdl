@@ -4,9 +4,11 @@ task xenosplit {
   input {
     File graftbam
     File hostbam
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     memory: "20GB"
     bootDiskSizeGb: 100
     docker: "mgibio/xenosplit:0.5"

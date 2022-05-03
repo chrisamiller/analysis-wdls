@@ -5,11 +5,13 @@ task mergeBams {
     Array[File] bams
     Boolean sorted = false
     String name = "merged"
+    Int preemptible_tries = 3
   }
 
   Int cores = 4
   Int space_needed_gb = 10 + round(4*size(bams, "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/bam-merge:0.1"
     memory: "8GB"
     cpu: cores
@@ -66,6 +68,13 @@ task mergeBams {
 }
 
 workflow wf {
-  input { Array[File] bams }
-  call mergeBams { input: bams=bams }
+  input { 
+    Array[File] bams 
+    Int preemptible_tries = 3
+  }
+  call mergeBams { 
+    input: 
+      bams=bams,
+      preemptible_tries=preemptible_tries
+  }
 }

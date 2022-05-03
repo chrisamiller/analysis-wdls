@@ -7,10 +7,12 @@ task vcfExpressionAnnotator {
     String expression_tool
     String data_type
     String sample_name
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size([vcf, expression_file], "GB"))
   runtime {
+    preemptible: preemptible_tries
     docker: "griffithlab/vatools:4.1.0"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -38,6 +40,7 @@ workflow wf {
     String expression_tool
     String data_type
     String sample_name
+    Int preemptible_tries = 3
   }
   call vcfExpressionAnnotator {
     input:
@@ -45,6 +48,7 @@ workflow wf {
     expression_file=expression_file,
     expression_tool=expression_tool,
     data_type=data_type,
-    sample_name=sample_name
+    sample_name=sample_name,
+    preemptible_tries=preemptible_tries
   }
 }

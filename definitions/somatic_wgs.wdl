@@ -81,6 +81,7 @@ workflow somaticWgs {
     String normal_sample_name
     File? validated_variants
     File? validated_variants_tbi
+    Int preemptible_tries = 3
   }
 
   call aw.alignmentWgs as tumorAlignmentAndQc {
@@ -107,7 +108,8 @@ workflow somaticWgs {
     minimum_base_quality=qc_minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call aw.alignmentWgs as normalAlignmentAndQc {
@@ -134,7 +136,8 @@ workflow somaticWgs {
     minimum_base_quality=qc_minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call c.concordance {
@@ -146,7 +149,8 @@ workflow somaticWgs {
     bam_1_bai=tumorAlignmentAndQc.bam_bai,
     bam_2=normalAlignmentAndQc.bam,
     bam_2_bai=normalAlignmentAndQc.bam_bai,
-    vcf=somalier_vcf
+    vcf=somalier_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call dvw.detectVariantsWgs as detectVariants {
@@ -190,7 +194,8 @@ workflow somaticWgs {
     normal_sample_name=normal_sample_name,
     vep_custom_annotations=vep_custom_annotations,
     validated_variants=validated_variants,
-    validated_variants_tbi=validated_variants_tbi
+    validated_variants_tbi=validated_variants_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call ms.mantaSomatic as manta {
@@ -203,7 +208,8 @@ workflow somaticWgs {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     non_wgs=manta_non_wgs,
-    output_contigs=manta_output_contigs
+    output_contigs=manta_output_contigs,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as tumorBamToCram {
@@ -211,11 +217,14 @@ workflow somaticWgs {
     bam=tumorAlignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as tumorIndexCram {
-    input: cram=tumorBamToCram.cram
+    input: 
+    cram=tumorBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram as normalBamToCram {
@@ -223,11 +232,14 @@ workflow somaticWgs {
     bam=normalAlignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram as normalIndexCram {
-    input: cram=normalBamToCram.cram
+    input: 
+    cram=normalBamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
 

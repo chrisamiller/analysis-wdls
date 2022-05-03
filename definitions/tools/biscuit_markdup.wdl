@@ -4,11 +4,13 @@ task biscuitMarkdup {
   input {
     File bam
     File bam_bai
+    Int preemptible_tries = 3
   }
 
   Int cores = 4
   Int space_needed_gb = 10 + round(2*size(bam, "GB"))
   runtime {
+    preemptible: preemptible_tries
     cpu: cores
     memory: "24GB"
     docker: "mgibio/biscuit:0.3.8"

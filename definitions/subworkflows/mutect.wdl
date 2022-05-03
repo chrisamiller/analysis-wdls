@@ -22,12 +22,14 @@ workflow mutect {
     File interval_list
     Int scatter_count
     String tumor_sample_name
+    Int preemptible_tries = 3
   }
 
   call sil.splitIntervalList {
     input:
     interval_list=interval_list,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 
   scatter(segment in splitIntervalList.split_interval_lists) {
@@ -40,18 +42,22 @@ workflow mutect {
       tumor_bam_bai=tumor_bam_bai,
       normal_bam=normal_bam,
       normal_bam_bai=normal_bam_bai,
-      interval_list=segment
+      interval_list=segment,
+      preemptible_tries=preemptible_tries
     }
   }
 
   call mv.mergeVcf {
     input:
     vcfs=mutectTask.vcf,
-    vcf_tbis=mutectTask.vcf_tbi
+    vcf_tbis=mutectTask.vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf {
-    input: vcf=mergeVcf.merged_vcf
+    input: 
+    vcf=mergeVcf.merged_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call ff.fpFilter {
@@ -64,7 +70,8 @@ workflow mutect {
     vcf=indexVcf.indexed_vcf,
     vcf_tbi=indexVcf.indexed_vcf_tbi,
     variant_caller="mutect",
-    sample_name=tumor_sample_name
+    sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   output {

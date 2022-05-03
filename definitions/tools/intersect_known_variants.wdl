@@ -6,10 +6,12 @@ task intersectKnownVariants {
     File vcf_tbi
     File? validated_variants
     File? validated_variants_tbi
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size([vcf, vcf_tbi, validated_variants, validated_variants_tbi], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "8GB"
     docker: "mgibio/bcftools-cwl:1.12"
     disks: "local-disk ~{space_needed_gb} SSD"
@@ -48,6 +50,7 @@ workflow wf {
     File vcf_tbi
     File? validated_variants
     File? validated_variants_tbi
+    Int preemptible_tries = 3
   }
 
   call intersectKnownVariants {
@@ -55,6 +58,7 @@ workflow wf {
     vcf=vcf,
     vcf_tbi=vcf_tbi,
     validated_variants=validated_variants,
-    validated_variants_tbi=validated_variants_tbi
+    validated_variants_tbi=validated_variants_tbi,
+    preemptible_tries=preemptible_tries
   }
 }

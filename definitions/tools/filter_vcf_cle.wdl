@@ -4,10 +4,12 @@ task filterVcfCle {
   input {
     File vcf
     Boolean filter
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(size(vcf, "GB")*2)
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/cle:v1.3.1"
     memory: "4GB"
     disks: "local-disk ~{space_needed_gb} SSD"

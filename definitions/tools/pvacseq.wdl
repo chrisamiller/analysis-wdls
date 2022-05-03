@@ -42,12 +42,14 @@ task pvacseq {
 
     String? blastp_db  # enum [refseq_select_prot, refseq_protein]
     Float? tumor_purity
+    Int preemptible_tries = 3
   }
 
   Float input_size = size([input_vcf, input_vcf_tbi], "GB")
   Float phased_variants_size = size([phased_proximal_variants_vcf, phased_proximal_variants_vcf_tbi], "GB")
   Int space_needed_gb = 10 + round(input_size + phased_variants_size)
   runtime {
+    preemptible: preemptible_tries
     memory: "16GB"
     cpu: n_threads
     docker: "griffithlab/pvactools:3.0.0"
@@ -152,6 +154,7 @@ workflow wf {
     Boolean? keep_tmp_files
     Boolean? netmhc_stab
     Boolean? run_reference_proteome_similarity
+    Int preemptible_tries = 3
   }
   call pvacseq {
     input:
@@ -188,6 +191,7 @@ workflow wf {
     allele_specific_binding_thresholds=allele_specific_binding_thresholds,
     keep_tmp_files=keep_tmp_files,
     netmhc_stab=netmhc_stab,
-    run_reference_proteome_similarity=run_reference_proteome_similarity
+    run_reference_proteome_similarity=run_reference_proteome_similarity,
+    preemptible_tries=preemptible_tries
   }
 }

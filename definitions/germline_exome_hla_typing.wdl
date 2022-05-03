@@ -40,7 +40,8 @@ workflow germlineExomeHlaTyping {
     Int? qc_minimum_base_quality
     Array[VepCustomAnnotation] vep_custom_annotations
     String? optitype_name
-  }
+    Int preemptible_tries = 3
+}
 
   call ge.germlineExome {
     input:
@@ -76,7 +77,8 @@ workflow germlineExomeHlaTyping {
     annotate_coding_only=annotate_coding_only,
     vep_custom_annotations=vep_custom_annotations,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
-    qc_minimum_base_quality=qc_minimum_base_quality
+    qc_minimum_base_quality=qc_minimum_base_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call od.optitypeDna as optitype {
@@ -85,7 +87,8 @@ workflow germlineExomeHlaTyping {
     reference_fai=reference_fai,
     cram=germlineExome.cram,
     cram_crai=germlineExome.cram_crai,
-    optitype_name=optitype_name
+    optitype_name=optitype_name,
+    preemptible_tries=preemptible_tries
   }
 
   output {

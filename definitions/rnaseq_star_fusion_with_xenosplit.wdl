@@ -42,6 +42,7 @@ workflow rnaseqStarFusionWithXenosplit {
     Boolean? examine_coding_effect
     String? fusioninspector_mode
     Boolean unzip_fastqs = true
+    Int preemptible_tries = 3
   }
 
   scatter(sequence in unaligned) {
@@ -53,7 +54,8 @@ workflow rnaseqStarFusionWithXenosplit {
       adapter_min_overlap=trimming_adapter_min_overlap,
       max_uncalled=trimming_max_uncalled,
       min_readlength=trimming_min_readlength,
-      unzip_fastqs=unzip_fastqs
+      unzip_fastqs=unzip_fastqs,
+      preemptible_tries=preemptible_tries
     }
   }
 
@@ -64,7 +66,8 @@ workflow rnaseqStarFusionWithXenosplit {
     outfile_name_prefix=graft_outfile_name_prefix,
     reference_annotation=graft_gtf_file,
     fastq=sequenceToTrimmedFastq.fastq1,
-    fastq2=sequenceToTrimmedFastq.fastq2
+    fastq2=sequenceToTrimmedFastq.fastq2,
+    preemptible_tries=preemptible_tries
   }
 
   call saf.starAlignFusion as hostStarAlignFusion {
@@ -74,13 +77,15 @@ workflow rnaseqStarFusionWithXenosplit {
     outfile_name_prefix=host_outfile_name_prefix,
     reference_annotation=host_gtf_file,
     fastq=sequenceToTrimmedFastq.fastq1,
-    fastq2=sequenceToTrimmedFastq.fastq2
+    fastq2=sequenceToTrimmedFastq.fastq2,
+    preemptible_tries=preemptible_tries
   }
 
   call x.xenosplit {
     input:
     graftbam=graftStarAlignFusion.aligned_bam,
-    hostbam=hostStarAlignFusion.aligned_bam
+    hostbam=hostStarAlignFusion.aligned_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call sttf.sequenceToTrimmedFastq as graftbamToFastq {
@@ -90,7 +95,8 @@ workflow rnaseqStarFusionWithXenosplit {
     adapter_trim_end=trimming_adapter_trim_end,
     adapter_min_overlap=trimming_adapter_min_overlap,
     max_uncalled=trimming_max_uncalled,
-    min_readlength=trimming_min_readlength
+    min_readlength=trimming_min_readlength,
+    preemptible_tries=preemptible_tries
   }
 
   call saf.starAlignFusion as graftbamStarAlignFusion {
@@ -100,7 +106,8 @@ workflow rnaseqStarFusionWithXenosplit {
     outfile_name_prefix=graft_outfile_name_prefix,
     reference_annotation=graft_gtf_file,
     fastq=[graftbamToFastq.fastq1],
-    fastq2=[graftbamToFastq.fastq2]
+    fastq2=[graftbamToFastq.fastq2],
+    preemptible_tries=preemptible_tries
   }
 
   call sfd.starFusionDetect {
@@ -110,33 +117,41 @@ workflow rnaseqStarFusionWithXenosplit {
     examine_coding_effect=examine_coding_effect,
     fusioninspector_mode=fusioninspector_mode,
     fastq=sequenceToTrimmedFastq.fastq1,
-    fastq2=sequenceToTrimmedFastq.fastq2
+    fastq2=sequenceToTrimmedFastq.fastq2,
+    preemptible_tries=preemptible_tries
   }
 
   call k.kallisto {
     input:
     kallisto_index=kallisto_index,
     strand=strand,
-    fastqs=[graftbamToFastq.fastqs]
+    fastqs=[graftbamToFastq.fastqs],
+    preemptible_tries=preemptible_tries
   }
 
   call ttg.transcriptToGene {
     input:
     transcript_table_h5=kallisto.expression_transcript_h5,
-    gene_transcript_lookup_table=gene_transcript_lookup_table
+    gene_transcript_lookup_table=gene_transcript_lookup_table,
+    preemptible_tries=preemptible_tries
   }
 
   call ss.samtoolsSort as sortBam {
-    input: input_bam=xenosplit.graft_bam
+    input: 
+    input_bam=xenosplit.graft_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call mdas.markDuplicatesAndSort as markDup {
     input:
-    bam=sortBam.sorted_bam
+    bam=sortBam.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call ib.indexBam {
-    input: bam=markDup.sorted_bam
+    input: 
+    bam=markDup.sorted_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call s.stringtie {
@@ -144,7 +159,8 @@ workflow rnaseqStarFusionWithXenosplit {
     bam=indexBam.indexed_bam,
     reference_annotation=graft_gtf_file,
     sample_name=sample_name,
-    strand=strand
+    strand=strand,
+    preemptible_tries=preemptible_tries
   }
 
   call gqm.generateQcMetrics {
@@ -152,7 +168,8 @@ workflow rnaseqStarFusionWithXenosplit {
     refFlat=refFlat,
     ribosomal_intervals=ribosomal_intervals,
     strand=strand,
-    bam=indexBam.indexed_bam
+    bam=indexBam.indexed_bam,
+    preemptible_tries=preemptible_tries
   }
 
   call btb.bamToBigwig as cgpbigwigBamcoverage {
@@ -161,7 +178,8 @@ workflow rnaseqStarFusionWithXenosplit {
     bam_bai=indexBam.indexed_bam_bai,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   output {

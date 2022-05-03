@@ -202,6 +202,7 @@ workflow immuno {
     Int? pvacseq_threads
     Int? iedb_retries
     Boolean? pvacfuse_keep_tmp_files
+    Int preemptible_tries = 3
   }
 
   call rsf.rnaseqStarFusion as rna {
@@ -228,7 +229,8 @@ workflow immuno {
     fusioninspector_mode=fusioninspector_mode,
     cdna_fasta=cdna_fasta,
     agfusion_database=agfusion_database,
-    agfusion_annotate_noncanonical=agfusion_annotate_noncanonical
+    agfusion_annotate_noncanonical=agfusion_annotate_noncanonical,
+    preemptible_tries=preemptible_tries
   }
 
   call se.somaticExome {
@@ -290,7 +292,8 @@ workflow immuno {
     tumor_sample_name=tumor_sample_name,
     normal_sample_name=normal_sample_name,
     validated_variants=validated_variants,
-    validated_variants_tbi=validated_variants_tbi
+    validated_variants_tbi=validated_variants_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call geht.germlineExomeHlaTyping as germlineExome {
@@ -328,7 +331,8 @@ workflow immuno {
     annotate_coding_only=annotate_coding_only,
     qc_minimum_mapping_quality=qc_minimum_mapping_quality,
     qc_minimum_base_quality=qc_minimum_base_quality,
-    optitype_name=optitype_name
+    optitype_name=optitype_name,
+    preemptible_tries=preemptible_tries
   }
 
   call pv.phaseVcf {
@@ -342,11 +346,13 @@ workflow immuno {
     bam=somaticExome.tumor_cram,
     bam_bai=somaticExome.tumor_cram_crai,
     normal_sample_name=normal_sample_name,
-    tumor_sample_name=tumor_sample_name
+    tumor_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call eha.extractHlaAlleles as extractAlleles {
-    input: file=germlineExome.optitype_tsv
+    input: file=germlineExome.optitype_tsv,
+    preemptible_tries=preemptible_tries
   }
 
   call hc.hlaConsensus {
@@ -354,13 +360,15 @@ workflow immuno {
     hla_source_mode=hla_source_mode,
     optitype_hla_alleles=extractAlleles.allele_string,
     clinical_mhc_classI_alleles=clinical_mhc_classI_alleles,
-    clinical_mhc_classII_alleles=clinical_mhc_classII_alleles
+    clinical_mhc_classII_alleles=clinical_mhc_classII_alleles,
+    preemptible_tries=preemptible_tries
   }
 
   call ikv.intersectKnownVariants as intersectPassingVariants {
     input:
     vcf=somaticExome.final_filtered_vcf,
-    vcf_tbi=somaticExome.final_filtered_vcf_tbi
+    vcf_tbi=somaticExome.final_filtered_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call p.pvacseq {
@@ -407,7 +415,8 @@ workflow immuno {
     n_threads=pvacseq_threads,
     variants_to_table_fields=variants_to_table_fields,
     variants_to_table_genotype_fields=variants_to_table_genotype_fields,
-    vep_to_table_fields=vep_to_table_fields
+    vep_to_table_fields=vep_to_table_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call pf.pvacfuse {
@@ -432,7 +441,8 @@ workflow immuno {
     fasta_size=fasta_size,
     downstream_sequence_length=downstream_sequence_length,
     exclude_nas=exclude_nas,
-    n_threads=pvacseq_threads
+    n_threads=pvacseq_threads,
+    preemptible_tries=preemptible_tries
   }
 
   output {

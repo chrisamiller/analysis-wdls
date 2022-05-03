@@ -9,11 +9,13 @@ task downsample {
     File reference_dict
     Int? random_seed
     String? strategy  # enum [HighAccuracy, ConstantMemory, Chained]
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Int space_needed_gb = 10 + round(reference_size + size(sam, "GB") * 2)
   runtime {
+    preemptible: preemptible_tries
     memory: "18GB"
     docker: "broadinstitute/gatk:4.1.4.1"
     disks: "local-disk ~{space_needed_gb} SSD"

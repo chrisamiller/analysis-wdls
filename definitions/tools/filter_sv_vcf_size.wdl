@@ -6,10 +6,12 @@ task filterSvVcfSize {
     String output_vcf_name = "filtered_sv_size.vcf"
     Int sv_size = 50000
     String size_method  # enum ["max_len" "min_len"]
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "mgibio/bcftools-cwl:1.12"
     disks: "local-disk ~{space_needed_gb} SSD"

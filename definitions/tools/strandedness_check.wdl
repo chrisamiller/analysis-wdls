@@ -7,10 +7,12 @@ task strandednessCheck {
     File cdna_fasta
     File reads1
     File reads2
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2*size([reference_annotation, kallisto_index, cdna_fasta, reads1, reads2], "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "16GB"
     bootDiskSizeGb: space_needed_gb  # default
     cpu: 1

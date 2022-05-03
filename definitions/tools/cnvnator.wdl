@@ -8,9 +8,11 @@ task cnvnator {
     File reference
     File reference_fai
     String sample_name
+    Int preemptible_tries = 3
   }
 
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/cnvnator-cwl:0.4"
     memory: "20GB"
     bootDiskSizeGb: 10

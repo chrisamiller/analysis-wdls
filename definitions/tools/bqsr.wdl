@@ -3,7 +3,7 @@ version 1.0
 # takes an aligned, sorted bam and returns a bam to which base quality
 # score recalibration has been applied
 
-workflow wf {
+workflow doBqsr {
   input {
     File reference
     File reference_fai
@@ -65,9 +65,9 @@ workflow wf {
   call GatherBamFiles {
     input:
       input_bams = applyBqsr.bqsr_bam,
-      output_name = output_name,
+      output_bam_basename = output_name,
       bam_size = bam_size,
-      preemptible_tries = preemptible_tries,
+      preemptible_tries = preemptible_tries
   }
 
   output {
@@ -158,10 +158,10 @@ task bqsr {
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Int space_needed_gb = 10 + round(known_sites_size  + bam_size + reference_size)
   runtime {
+    preemptible: preemptible_tries
     docker: "broadinstitute/gatk:4.1.8.1"
     memory: "6GB"
     disks: "local-disk ~{space_needed_gb} SSD"
-    preemptible: preemptible_tries
   }
 
   String outfile = "bqsr.table"
@@ -218,6 +218,7 @@ task applyBqsr {
 
   Int space_needed_gb = 10 + round(size([bqsr_table, reference, reference_fai, reference_dict], "GB") + size([bam, bam_bai], "GB") * 2)
   runtime {
+    preemptible: preemptible_tries
     docker: "broadinstitute/gatk:4.1.8.1"
     memory: "18GB"
     disks: "local-disk ~{space_needed_gb} SSD"

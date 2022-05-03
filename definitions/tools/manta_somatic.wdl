@@ -13,6 +13,7 @@ task mantaSomatic {
     File? call_regions_tbi
     Boolean non_wgs = false
     Boolean output_contigs = false
+    Int preemptible_tries = 3
   }
 
   Int cores = 12
@@ -21,6 +22,7 @@ task mantaSomatic {
   Float regions_size = size([call_regions, call_regions_tbi], "GB")
   Int size_needed_gb = 10 + 2 * round(ref_size + bam_size + regions_size)
   runtime {
+    preemptible: preemptible_tries
     docker: "mgibio/manta_somatic-cwl:1.6.0"
     cpu: cores
     memory: "24GB"
@@ -72,6 +74,7 @@ workflow wf {
     File? call_regions_tbi
     Boolean non_wgs = false
     Boolean output_contigs = false
+    Int preemptible_tries = 3
   }
 
   call mantaSomatic {
@@ -86,6 +89,7 @@ workflow wf {
     call_regions=call_regions,
     call_regions_tbi=call_regions_tbi,
     non_wgs=non_wgs,
-    output_contigs=output_contigs
+    output_contigs=output_contigs,
+    preemptible_tries=preemptible_tries
   }
 }

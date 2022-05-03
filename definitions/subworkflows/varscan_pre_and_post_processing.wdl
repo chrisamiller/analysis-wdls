@@ -32,17 +32,21 @@ workflow varscanPreAndPostProcessing {
     Float p_value = 0.99
     Float? max_normal_freq
     Int scatter_count = 50
+    Int preemptible_tries = 3
   }
 
   call sil.splitIntervalList {
     input:
     interval_list=interval_list,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 
   scatter (intervals_segment in splitIntervalList.split_interval_lists) {
     call itb.intervalsToBed {
-      input: interval_list=intervals_segment
+      input: 
+      interval_list=intervals_segment,
+      preemptible_tries=preemptible_tries
     }
 
     call v.varscan {
@@ -59,7 +63,8 @@ workflow varscanPreAndPostProcessing {
       min_coverage=min_coverage,
       min_var_freq=min_var_freq,
       p_value=p_value,
-      max_normal_freq=max_normal_freq
+      max_normal_freq=max_normal_freq,
+      preemptible_tries=preemptible_tries
     }
   }
 
@@ -67,28 +72,32 @@ workflow varscanPreAndPostProcessing {
     input:
     vcfs=varscan.somatic_snvs,
     sequence_dictionary=reference_dict,
-    merged_vcf_basename="somatic_snvs"
+    merged_vcf_basename="somatic_snvs",
+    preemptible_tries=preemptible_tries
   }
 
   call pmv.picardMergeVcfs as mergeScatteredSomaticIndels {
     input:
     vcfs=varscan.somatic_indels,
     sequence_dictionary=reference_dict,
-    merged_vcf_basename="somatic_indels"
+    merged_vcf_basename="somatic_indels",
+    preemptible_tries=preemptible_tries
   }
 
   call pmv.picardMergeVcfs as mergeScatteredSomaticHcSnvs  {
     input:
     vcfs=varscan.somatic_hc_snvs,
     sequence_dictionary=reference_dict,
-    merged_vcf_basename="somatic_hc_snvs"
+    merged_vcf_basename="somatic_hc_snvs",
+    preemptible_tries=preemptible_tries
   }
 
   call pmv.picardMergeVcfs as mergeScatteredSomaticHcIndels {
     input:
     vcfs=varscan.somatic_hc_indels,
     sequence_dictionary=reference_dict,
-    merged_vcf_basename="somatic_hc_indels"
+    merged_vcf_basename="somatic_hc_indels",
+    preemptible_tries=preemptible_tries
   }
 
   call sfs.setFilterStatus as mergeSnvs {
@@ -99,11 +108,13 @@ workflow varscanPreAndPostProcessing {
     filtered_vcf_tbi=mergeScatteredSomaticHcSnvs.merged_vcf_tbi,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexMergedSnvs {
-    input: vcf=mergeSnvs.merged_vcf
+    input: vcf=mergeSnvs.merged_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call sfs.setFilterStatus as mergeIndels {
@@ -114,35 +125,42 @@ workflow varscanPreAndPostProcessing {
     filtered_vcf_tbi=mergeScatteredSomaticHcIndels.merged_vcf_tbi,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexMergedIndels {
-    input: vcf=mergeIndels.merged_vcf
+    input: vcf=mergeIndels.merged_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call mv.mergeVcf as merge {
     input:
     vcfs=[indexMergedSnvs.indexed_vcf, indexMergedIndels.indexed_vcf],
-    vcf_tbis=[indexMergedSnvs.indexed_vcf_tbi, indexMergedIndels.indexed_vcf_tbi]
+    vcf_tbis=[indexMergedSnvs.indexed_vcf_tbi, indexMergedIndels.indexed_vcf_tbi],
+    preemptible_tries=preemptible_tries
   }
 
   call rvsn.replaceVcfSampleName as renameTumorSample {
     input:
     input_vcf=merge.merged_vcf,
     sample_to_replace="TUMOR",
-    new_sample_name=tumor_sample_name
+    new_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call rvsn.replaceVcfSampleName as renameNormalSample {
     input:
     input_vcf=renameTumorSample.renamed_vcf,
     sample_to_replace="NORMAL",
-    new_sample_name=normal_sample_name
+    new_sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as index {
-    input: vcf=renameNormalSample.renamed_vcf
+    input: 
+    vcf=renameNormalSample.renamed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call ff.fpFilter as filter {
@@ -156,7 +174,8 @@ workflow varscanPreAndPostProcessing {
     vcf_tbi=index.indexed_vcf_tbi,
     min_var_freq=min_var_freq,
     sample_name=tumor_sample_name,
-    variant_caller="varscan"
+    variant_caller="varscan",
+    preemptible_tries=preemptible_tries
   }
 
   output {

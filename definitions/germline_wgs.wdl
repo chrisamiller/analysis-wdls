@@ -76,6 +76,7 @@ workflow germlineWgs {
     Int? cnv_filter_min_size
     File? blocklist_bedpe
     String disclaimer_text = "Workflow source can be found at https://github.com/genome/analysis-workflows"
+    Int preemptible_tries = 3
   }
 
   call aw.alignmentWgs as alignmentAndQc {
@@ -101,7 +102,8 @@ workflow germlineWgs {
     minimum_base_quality=minimum_base_quality,
     per_base_intervals=per_base_intervals,
     per_target_intervals=per_target_intervals,
-    summary_intervals=summary_intervals
+    summary_intervals=summary_intervals,
+    preemptible_tries=preemptible_tries
   }
 
   call gdv.germlineDetectVariants as detectVariants {
@@ -126,7 +128,8 @@ workflow germlineWgs {
     vep_plugins=vep_plugins,
     vep_to_table_fields=vep_to_table_fields,
     variants_to_table_fields=variants_to_table_fields,
-    variants_to_table_genotype_fields=variants_to_table_genotype_fields
+    variants_to_table_genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call asalb.addStringAtLineBgzipped as addDisclaimerFilteredVcf {
@@ -134,11 +137,13 @@ workflow germlineWgs {
     input_file=detectVariants.filtered_vcf,
     line_number=2,
     some_text="##disclaimer=~{disclaimer_text}",
-    output_name=basename(detectVariants.filtered_vcf)
+    output_name=basename(detectVariants.filtered_vcf),
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexDisclaimerFilteredVcf {
-    input: vcf=addDisclaimerFilteredVcf.output_file
+    input: vcf=addDisclaimerFilteredVcf.output_file,
+    preemptible_tries=preemptible_tries
   }
 
   call asalb.addStringAtLineBgzipped as addDisclaimerFinalVcf {
@@ -146,11 +151,13 @@ workflow germlineWgs {
     input_file=detectVariants.final_vcf,
     line_number=2,
     some_text="##disclaimer=~{disclaimer_text}",
-    output_name=basename(detectVariants.final_vcf)
+    output_name=basename(detectVariants.final_vcf),
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as indexDisclaimerFinalVcf {
-    input: vcf=addDisclaimerFinalVcf.output_file
+    input: vcf=addDisclaimerFinalVcf.output_file,
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerFilteredTsv {
@@ -158,7 +165,8 @@ workflow germlineWgs {
     input_file=detectVariants.filtered_tsv,
     line_number=1,
     some_text="#~{disclaimer_text}",
-    output_name=basename(detectVariants.filtered_tsv)
+    output_name=basename(detectVariants.filtered_tsv),
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerFinalTsv {
@@ -166,7 +174,8 @@ workflow germlineWgs {
     input_file=detectVariants.final_tsv,
     line_number=1,
     some_text="#~{disclaimer_text}",
-    output_name=basename(detectVariants.final_tsv)
+    output_name=basename(detectVariants.final_tsv),
+    preemptible_tries=preemptible_tries
   }
 
   call sssc.singleSampleSvCallers as svDetectVariants {
@@ -201,7 +210,8 @@ workflow germlineWgs {
     sv_paired_count=sv_filter_paired_count,
     sv_split_count=sv_filter_split_count,
     genome_build=vep_ensembl_assembly,
-    blocklist_bedpe=blocklist_bedpe
+    blocklist_bedpe=blocklist_bedpe,
+    preemptible_tries=preemptible_tries
   }
 
   call asalb.addStringAtLineBgzipped as addDisclaimerSurvivorSvVcf {
@@ -209,7 +219,8 @@ workflow germlineWgs {
     input_file=svDetectVariants.survivor_merged_vcf,
     line_number=2,
     some_text="##disclaimer=~{disclaimer_text}",
-    output_name=basename(svDetectVariants.survivor_merged_vcf)
+    output_name=basename(svDetectVariants.survivor_merged_vcf),
+    preemptible_tries=preemptible_tries
   }
 
   call asalb.addStringAtLineBgzipped as addDisclaimerBcftoolsSvVcf {
@@ -217,7 +228,8 @@ workflow germlineWgs {
     input_file=svDetectVariants.bcftools_merged_vcf,
     line_number=2,
     some_text="##disclaimer=~{disclaimer_text}",
-    output_name=basename(svDetectVariants.bcftools_merged_vcf)
+    output_name=basename(svDetectVariants.bcftools_merged_vcf),
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerSurvivorSvTsv {
@@ -225,7 +237,8 @@ workflow germlineWgs {
     input_file=svDetectVariants.survivor_merged_annotated_tsv,
     line_number=1,
     some_text="#~{disclaimer_text}",
-    output_name=basename(svDetectVariants.survivor_merged_annotated_tsv)
+    output_name=basename(svDetectVariants.survivor_merged_annotated_tsv),
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerBcftoolsSvTsv {
@@ -233,7 +246,8 @@ workflow germlineWgs {
     input_file=svDetectVariants.bcftools_merged_annotated_tsv,
     line_number=1,
     some_text="#~{disclaimer_text}",
-    output_name=basename(svDetectVariants.bcftools_merged_annotated_tsv)
+    output_name=basename(svDetectVariants.bcftools_merged_annotated_tsv),
+    preemptible_tries=preemptible_tries
   }
 
   call asal.addStringAtLine as addDisclaimerBcftoolsFilteredSvTsv {
@@ -241,7 +255,8 @@ workflow germlineWgs {
     input_file=svDetectVariants.bcftools_merged_filtered_annotated_tsv,
     line_number=1,
     some_text="#~{disclaimer_text}",
-    output_name=basename(svDetectVariants.bcftools_merged_filtered_annotated_tsv)
+    output_name=basename(svDetectVariants.bcftools_merged_filtered_annotated_tsv),
+    preemptible_tries=preemptible_tries
   }
 
   call btc.bamToCram {
@@ -249,11 +264,13 @@ workflow germlineWgs {
     bam=alignmentAndQc.bam,
     reference=reference,
     reference_fai=reference_fai,
-    reference_dict=reference_dict
+    reference_dict=reference_dict,
+    preemptible_tries=preemptible_tries
   }
 
   call ic.indexCram {
-    input: cram=bamToCram.cram
+    input: cram=bamToCram.cram,
+    preemptible_tries=preemptible_tries
   }
 
   output {

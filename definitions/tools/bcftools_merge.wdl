@@ -8,10 +8,12 @@ task bcftoolsMerge {
     String output_type = "z"  # enum ["b", "u", "z", "v"]
     String output_vcf_name = "bcftools_merged.vcf.gz"
     Array[File] vcfs
+    Int preemptible_tries = 3
   }
 
   Int space_needed_gb = 10 + round(2 * size(vcfs, "GB"))
   runtime {
+    preemptible: preemptible_tries
     memory: "4GB"
     docker: "mgibio/bcftools-cwl:1.12"
     disks: "local-disk ~{space_needed_gb} SSD"

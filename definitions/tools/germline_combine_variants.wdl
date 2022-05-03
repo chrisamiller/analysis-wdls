@@ -9,12 +9,14 @@ task germlineCombineVariants {
     File varscan_vcf_tbi
     File docm_vcf
     File docm_vcf_tbi
+    Int preemptible_tries = 3
   }
 
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float vcf_size = size([varscan_vcf, varscan_vcf_tbi, docm_vcf, docm_vcf_tbi], "GB")
   Int space_needed_gb = 10 + round(reference_size + 2*vcf_size)
   runtime {
+    preemptible: preemptible_tries
     memory: "9GB"
     bootDiskSizeGb: 25
     docker: "mgibio/gatk-cwl:3.6.0"

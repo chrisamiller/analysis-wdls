@@ -61,6 +61,7 @@ workflow detectVariantsNonhuman {
     Array[String] variants_to_table_fields = ["CHROM", "POS", "ID", "REF", "ALT", "set", "AC", "AF"]
     Array[String] variants_to_table_genotype_fields = ["GT", "AD"]
     Array[String] vep_to_table_fields = []
+    Int preemptible_tries = 3
   }
 
   call m.mutect {
@@ -74,7 +75,8 @@ workflow detectVariantsNonhuman {
     normal_bam=normal_bam,
     normal_bam_bai=normal_bam_bai,
     interval_list=roi_intervals,
-    scatter_count=scatter_count
+    scatter_count=scatter_count,
+    preemptible_tries=preemptible_tries
   }
 
   call sapp.strelkaAndPostProcessing as strelka {
@@ -90,7 +92,8 @@ workflow detectVariantsNonhuman {
     exome_mode=strelka_exome_mode,
     cpu_reserved=strelka_cpu_reserved,
     normal_sample_name=normal_sample_name,
-    tumor_sample_name=normal_sample_name
+    tumor_sample_name=normal_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call vpapp.varscanPreAndPostProcessing as varscan {
@@ -110,7 +113,8 @@ workflow detectVariantsNonhuman {
     p_value=varscan_p_value,
     max_normal_freq=varscan_max_normal_freq,
     normal_sample_name=normal_sample_name,
-    tumor_sample_name=tumor_sample_name
+    tumor_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call cv.combineVariants as combine {
@@ -127,16 +131,20 @@ workflow detectVariantsNonhuman {
 
     varscan_vcf=varscan.filtered_vcf,
     varscan_vcf_tbi=varscan.filtered_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call vd.vtDecompose as decompose {
     input:
     vcf=combine.combined_vcf,
-    vcf_tbi=combine.combined_vcf_tbi
+    vcf_tbi=combine.combined_vcf_tbi,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as decomposeIndex {
-    input: vcf=decompose.decomposed_vcf
+    input: 
+    vcf=decompose.decomposed_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call v.vep as annotateVariants {
@@ -152,7 +160,8 @@ workflow detectVariantsNonhuman {
     ensembl_version=vep_ensembl_version,
     pick=vep_pick,
     plugins=vep_plugins,
-    synonyms_file=synonyms_file
+    synonyms_file=synonyms_file,
+    preemptible_tries=preemptible_tries
   }
 
   call vr.vcfReadcount {
@@ -168,7 +177,8 @@ workflow detectVariantsNonhuman {
     tumor_bam=tumor_bam,
     tumor_bam_bai=tumor_bam_bai,
     minimum_base_quality=readcount_minimum_base_quality,
-    minimum_mapping_quality=readcount_minimum_mapping_quality
+    minimum_mapping_quality=readcount_minimum_mapping_quality,
+    preemptible_tries=preemptible_tries
   }
 
   call fvn.filterVcfNonhuman as filterVcf {
@@ -186,15 +196,20 @@ workflow detectVariantsNonhuman {
     reference_fai=reference_fai,
     reference_dict=reference_dict,
     normal_sample_name=normal_sample_name,
-    tumor_sample_name=tumor_sample_name
+    tumor_sample_name=tumor_sample_name,
+    preemptible_tries=preemptible_tries
   }
 
   call b.bgzip as annotatedFilterBgzip {
-    input: file=filterVcf.filtered_vcf
+    input: 
+    file=filterVcf.filtered_vcf,
+    preemptible_tries=preemptible_tries
   }
 
   call iv.indexVcf as annotatedFilterIndex {
-    input: vcf=annotatedFilterBgzip.bgzipped_file
+    input: 
+    vcf=annotatedFilterBgzip.bgzipped_file,
+    preemptible_tries=preemptible_tries
   }
 
   call vtt.variantsToTable {
@@ -205,14 +220,16 @@ workflow detectVariantsNonhuman {
     vcf=annotatedFilterIndex.indexed_vcf,
     vcf_tbi=annotatedFilterIndex.indexed_vcf_tbi,
     fields=variants_to_table_fields,
-    genotype_fields=variants_to_table_genotype_fields
+    genotype_fields=variants_to_table_genotype_fields,
+    preemptible_tries=preemptible_tries
   }
 
   call avftt.addVepFieldsToTable {
     input:
     vcf=annotatedFilterIndex.indexed_vcf,
     vep_fields=vep_to_table_fields,
-    tsv=variantsToTable.variants_tsv
+    tsv=variantsToTable.variants_tsv,
+    preemptible_tries=preemptible_tries
   }
 
   output {

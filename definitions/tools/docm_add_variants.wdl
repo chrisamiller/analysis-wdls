@@ -9,12 +9,14 @@ task docmAddVariants {
     File callers_vcf_tbi
     File docm_vcf
     File docm_vcf_tbi
+    Int preemptible_tries = 3
   }
   Float reference_size = size([reference, reference_fai, reference_dict], "GB")
   Float callers_size = size([callers_vcf, callers_vcf_tbi], "GB")
   Float docm_size = size([docm_vcf, docm_vcf_tbi], "GB")
   Int space_needed_gb = 10 + round(reference_size + callers_size + docm_size)*2
   runtime {
+    preemptible: preemptible_tries
     memory: "9GB"
     bootDiskSizeGb: 25
     docker: "mgibio/gatk-cwl:3.6.0"
@@ -43,6 +45,7 @@ workflow wf {
     File callers_vcf_tbi
     File docm_vcf
     File docm_vcf_tbi
+    Int preemptible_tries = 3
   }
 
   call docmAddVariants {
@@ -53,6 +56,7 @@ workflow wf {
     callers_vcf=callers_vcf,
     callers_vcf_tbi=callers_vcf_tbi,
     docm_vcf=docm_vcf,
-    docm_vcf_tbi=docm_vcf_tbi
+    docm_vcf_tbi=docm_vcf_tbi,
+    preemptible_tries = 3
   }
 }
